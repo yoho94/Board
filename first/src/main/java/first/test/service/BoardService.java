@@ -16,4 +16,5 @@ public interface BoardService {
 	public List<BoardVO> listSearch(SearchCriteria cri) throws Exception; // 전체 게시글 목록
 	public int listSearchCount(SearchCriteria cri) throws Exception; // 페이징 처리
 	public int reRegist(BoardVO vo, int obno) throws Exception;
+	public BoardVO readNotice() throws Exception;
 }

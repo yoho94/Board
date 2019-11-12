@@ -59,6 +59,10 @@ public class BoardDAOImpl implements BoardDAO {
 	@Override
 	public int reUpdate(BoardVO vo) throws Exception {
 		return session.update(namespace+".reUpdate", vo);		
+	}	
+	@Override
+	public BoardVO readNotice() throws Exception {
+		return session.selectOne(namespace+".readNotice");
 	}
 
 }

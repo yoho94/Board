@@ -30,10 +30,11 @@
 $(document).ready(function(){
 	var formObj = $("#writeForm");
 	
-	$("#ok").on("click", function(){
+	$("#ok").on("click", function(){		
 		formObj.submit();
 		$("#searchForm", opener.document).submit();
-		window.close()
+		self.opener = self;
+		window.close();
 	});
 });
 </script>
@@ -65,7 +66,7 @@ $(document).ready(function(){
 			</div>
 
 			<div class="box-footer">
-				<button id='ok' type="submit" class="btn btn-default">확인</button>
+				<button id='ok' type="button" class="btn btn-default">확인</button>
 				<button type="button" class="btn btn-warning" onclick='window.close()'>취소</button>
 			</div>
 		</form>

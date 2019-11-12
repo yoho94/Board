@@ -17,5 +17,6 @@ public interface BoardDAO {
 	public int reUpdate(BoardVO vo) throws Exception;
 	public int reInsert(BoardVO vo) throws Exception;
 	public int updateReGroup(int bno) throws Exception;
+	public BoardVO readNotice() throws Exception;
 	
 }

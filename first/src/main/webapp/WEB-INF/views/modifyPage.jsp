@@ -35,12 +35,14 @@
 		console.log(opener.window.name);
 		
 		$("#save").on("click", function(){
+			formObj.attr("action" , "/modifyPageAction");
 			formObj.attr("target", opener.window.name);
 			formObj.submit();
 			window.close();
 		});
 		
 		$("#close").on("click", function(){
+			self.opener = self;
 			window.close();
 		});
 	});
@@ -70,7 +72,7 @@
 				<label for="exampleInputEmail1">작성자</label>
 				<input type="text" name="writer" class="form-control" value="${boardVO.writer}" readonly>
 			</div>
-			<button type="submit" class="btn btn-primary" id='save'>수정</button>
+			<button type="button" class="btn btn-primary" id='save'>수정</button>
 			<button type="button" class="btn btn-warning" id='close'>취소</button>
 		</div>
 	</form>

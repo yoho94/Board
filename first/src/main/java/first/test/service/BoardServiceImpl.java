@@ -54,5 +54,9 @@ public class BoardServiceImpl implements BoardService {
 		vo.setRe_depth(oVO.getRe_depth() + 1);		
 		return dao.reInsert(vo);
 	}
+	@Override
+	public BoardVO readNotice() throws Exception {
+		return dao.readNotice();
+	}
 
 }

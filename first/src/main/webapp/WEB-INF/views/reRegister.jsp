@@ -34,13 +34,14 @@
 		console.log(formObj);
 		console.log(opener.window.name);
 		
-		$("#save").on("click", function(){
+		$("#reSave").on("click", function(){
+			formObj.attr("action" , "/reRegisterAction");
 			formObj.attr("target", opener.window.name);
 			formObj.submit();
 			window.close();
 		});
 		
-		$("#close").on("click", function(){
+		$("#reClose").on("click", function(){
 			window.close();
 		});
 	});
@@ -70,8 +71,8 @@
 			</div>
 
 			<div class="box-footer">
-				<button type="submit" class="btn btn-default" id='save'>확인</button>
-				<button type="button" class="btn btn-warning" id='close'>취소</button>
+				<button type="button" class="btn btn-default" id='reSave'>확인</button>
+				<button type="button" class="btn btn-warning" id='reClose'>취소</button>
 			</div>
 		</form>
 	</div>

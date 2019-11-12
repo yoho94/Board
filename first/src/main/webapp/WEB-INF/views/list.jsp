@@ -28,6 +28,23 @@ function openPop(form, action){
 	frm.submit();
 }
 
+function getCookie(name){
+    var nameOfCookie = name + "=";
+    var x = 0;
+    while (x <= document.cookie.length){
+        var y = (x + nameOfCookie.length);
+        if (document.cookie.substring(x, y) == nameOfCookie){
+        if ((endOfCookie = document.cookie.indexOf(";", y)) == -1){
+        endOfCookie = document.cookie.length;
+        }
+        return unescape (document.cookie.substring(y, endOfCookie));
+        }
+        x = document.cookie.indexOf (" ", x) + 1;
+        if (x == 0) break;
+    }
+    return "";
+}
+
 $(document).ready(function(){
 	var formObj = $("[id='readForm']");
 	
@@ -41,10 +58,25 @@ $(document).ready(function(){
 // 		formObj.attr("action", "/writePage");
 // 		formObj.submit();
 	});
+	
+	if(getCookie("noticeCookie${noticeVO.bno }") != "done")
+		$('div.modal').modal({remote : '/modal'});
+	
+	
 });
+
+
 </script>
 <body>
 	<div class='container'>
+	
+<div class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+        <!-- remote ajax call이 되는영역 -->
+    </div>
+  </div>
+</div>
 		<table class='table table-striped'>
 			<colgroup>
 				<col width="10%">
