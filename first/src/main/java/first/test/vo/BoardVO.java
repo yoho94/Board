@@ -2,6 +2,10 @@ package first.test.vo;
 
 import java.sql.Timestamp;
 
+import com.nhncorp.lucy.security.xss.LucyXssFilter;
+import com.nhncorp.lucy.security.xss.XssPreventer;
+import com.nhncorp.lucy.security.xss.XssSaxFilter;
+
 public class BoardVO {
 	private int bno;
 	private String title;
@@ -20,7 +24,7 @@ public class BoardVO {
 	public void setBno(int bno) {
 		this.bno = bno;
 	}
-	public String getTitle() {
+	public String getTitle() {		
 		return title;
 	}
 	public void setTitle(String title) {
@@ -33,7 +37,7 @@ public class BoardVO {
 		this.content = content;
 	}
 	public String getWriter() {
-		return writer;
+		return writer.replaceAll("'", "&#039;");
 	}
 	public void setWriter(String writer) {
 		this.writer = writer;
@@ -85,8 +89,6 @@ public class BoardVO {
 		return "BoardVO [bno=" + bno + ", title=" + title + ", content=" + content + ", writer=" + writer + ", regdate="
 				+ regdate + ", viewcnt=" + viewcnt + ", re_group=" + re_group + ", re_sorts=" + re_sorts + ", re_depth="
 				+ re_depth + ", isDelete=" + isDelete + ", isNotice=" + isNotice + "]";
-	}
-	
-	
+	}	
 
 }

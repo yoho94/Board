@@ -10,7 +10,7 @@
 <script>
 	$("#closeBtn").click(function() {
 		if ($("#oneDay").prop("checked"))
-			setCookie("noticeCookie${noticeVO.bno }", "done", 1);
+			setCookie("noticeBno${noticeVO.bno },id${loginVO.userId}", "done", 1);
 
 		$(".modal").hide();
 	});
@@ -22,6 +22,9 @@
 				+ todayDate.toGMTString() + ";"
 	}
 </script>
+<style>
+div.modal-content img{width:100%}
+</style>
 
 </head>
 <body>

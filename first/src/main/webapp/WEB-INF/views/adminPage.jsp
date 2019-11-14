@@ -28,45 +28,66 @@ function openPop(form, action){
 	frm.submit();
 }
 
-function getCookie(name){
-    var nameOfCookie = name + "=";
-    var x = 0;
-    while (x <= document.cookie.length){
-        var y = (x + nameOfCookie.length);
-        if (document.cookie.substring(x, y) == nameOfCookie){
-        if ((endOfCookie = document.cookie.indexOf(";", y)) == -1){
-        endOfCookie = document.cookie.length;
-        }
-        return unescape (document.cookie.substring(y, endOfCookie));
-        }
-        x = document.cookie.indexOf (" ", x) + 1;
-        if (x == 0) break;
-    }
-    return "";
+function del(formObj){
+	
+	if(confirm("정말 삭제하시겠습니까?")) {
+		formObj.action = "/adminRemoveAction";
+		formObj.submit();
+	}
+	
 }
 
-function readSubmit(formObj) {
-	formObj.action = "/readPage";
-	formObj.submit();
+function realDel(formObj){
+	
+	if(confirm("정말 완전삭제하시겠습니까? 답글까지 전부 삭제됩니다.")) {
+		formObj.action = "/realRemoveAction";
+		formObj.submit();
+	}
+	
 }
+
+function restoreBtn(formObj){
+	
+	if(confirm("정말 복구 하시겠습니까?")) {
+		formObj.action = "/restore";
+		formObj.submit();
+	}
+	
+}
+
 
 $(document).ready(function(){
 	var formObj = $("[id='readForm']");
 	
-	$("#newBtn").on("click", function(){
-		openPop(formObj, "/writePage");
-// 		formObj.attr("action", "/writePage");
-// 		formObj.submit();
-	});
+// 	$("#newBtn").on("click", function(){
+// 		openPop(formObj, "/writePage");
+// // 		formObj.attr("action", "/writePage");
+// // 		formObj.submit();
+// 	});
 	$("[id='readSubmit']").on("click", function(){
-		var form = $(this.form);
-		openPop(form, "/readPage");
+		openPop(formObj, "/readPage");
 // 		formObj.attr("action", "/writePage");
 // 		formObj.submit();
 	});
 	
-	if('${noticeVO}' && getCookie("noticeBno${noticeVO.bno },id${loginVO.userId}") != "done")
-		$('div.modal').modal({remote : '/modal'});
+// 	$("[id='deleteBtn']").on("click", function(){
+// 		if(confirm("정말 삭제하시겠습니까?")) {
+// 			formObj.attr("action", "/removeAction");
+// 			formObj.submit();
+// 			location.reload();
+// 		}
+// 	});
+	
+// 	$("[id='realDeleteBtn']").on("click", function(){
+// 		if(confirm("정말 완전삭제하시겠습니까? 답글까지 전부 삭제됩니다.")) {
+// 			formObj.attr("action", "/realRemoveAction");
+// 			formObj.submit();
+// 			location.reload();
+// 		}
+// 	});
+	
+// 	if(getCookie("noticeCookie${noticeVO.bno }") != "done")
+// 		$('div.modal').modal({remote : '/modal'});
 	
 	
 });
@@ -85,11 +106,12 @@ $(document).ready(function(){
 </div>
 		<table class='table table-striped'>
 			<colgroup>
-				<col width="10%">
+				<col width="8%">
 				<col>
-				<col width="15%">
-				<col width="15%">
 				<col width="10%">
+				<col width="15%">
+				<col width="8%">
+				<col width="20%">
 			</colgroup>
 			<thead>
 				<tr>
@@ -98,11 +120,12 @@ $(document).ready(function(){
 					<th>작성자</th>
 					<th>날짜</th>
 					<th>조회수</th>
+					<th>복구, 삭제, 완전삭제</th>
 				</tr>
 			</thead>
-			<c:forEach items="${list}" var="boardVO" varStatus="status">
+			<c:forEach items="${list}" var="boardVO">
 				<tr>
-					<td>${(pageMaker.totalCount - status.index) - ( (pageMaker.pvo.page - 1)  *  pageMaker.pvo.perPageNum ) }</td>
+					<td>${boardVO.bno}</td>
 					<td>
 						<form name='readForm' action='/readPage' method='post'
 							id='readForm'>
@@ -130,7 +153,8 @@ $(document).ready(function(){
 								value="<c:out value='${boardVO.title}'/>">
 							</c:when>
 							<c:otherwise>
-							삭제된 게시글 입니다.
+							<input type='submit' id='readSubmit' value='${boardVO.title}' 
+							style="bordr-width: 1px; border-color:red; text-align: left;"/>
 							</c:otherwise>
 							</c:choose>
 						</form>
@@ -139,12 +163,27 @@ $(document).ready(function(){
 					<td><fmt:formatDate pattern="yyyy-MM-dd HH:mm"
 							value="${boardVO.regdate}" /></td>
 					<td>${boardVO.viewcnt}</td>
+					<td>
+					<form name='delForm' method='post'
+							id='delForm'>
+							<input type='hidden' name='bno' value="<c:out value='${boardVO.bno}'/>">
+							<input type='hidden' name='re_group' value="<c:out value='${boardVO.re_group}'/>">
+							<input type="hidden" name="page" value="${pageMaker.pvo.page}">
+							<input type="hidden" name="perPageNum"
+								value="${pageMaker.pvo.perPageNum}"> 
+							<input type="hidden" name="searchType" value="${pvo.searchType}">
+							<input type="hidden" name="keyword" value="${pvo.keyword}">
+					<button type='button' id="restore" class='btn btn-primary' onclick="restoreBtn(this.form)">복구</button>
+					<button type='button' id="deleteBtn" class='btn btn-info' onclick="del(this.form)">삭제</button>
+					<button type='button' id="realDeleteBtn" class='btn btn-danger' onclick="realDel(this.form)">완전삭제</button>		
+					</form>
+					</td>
 				</tr>
 			</c:forEach>
 		</table>
 
 		<hr>
-	<form action="/list" method="post" name='searchForm' id='searchForm'>
+	<form action="/adminPage" method="post" name='searchForm' id='searchForm'>
 		<div class='search row'>
 			<div class='col-xs-2 col-sm-2'>
 					<select name='perPageNum' class='form-control'
@@ -167,6 +206,8 @@ $(document).ready(function(){
 				<select name="searchType" class='form-control' id='type'>
 					<option value="n"
 						<c:out value="${pvo.searchType == null?'selected':''}"/>>---</option>
+					<option value="del"
+						<c:out value="${pvo.searchType eq 'del'?'selected':''}"/>>삭제글 + 제목</option>
 					<option value="t"
 						<c:out value="${pvo.searchType eq 't'?'selected':''}"/>>제목</option>
 					<option value="c"
@@ -192,7 +233,7 @@ $(document).ready(function(){
 							class='input-group-btn'>
 							<button type='submit' id="searchBtn" class='btn btn-primary'>검색</button>
 
-							<button type='button' id="newBtn" class='btn btn-light'>글쓰기</button>
+<!-- 							<button type='button' id="newBtn" class='btn btn-light'>글쓰기</button> -->
 						</span>
 
 					</div>
@@ -207,7 +248,7 @@ $(document).ready(function(){
 			<ul class="pagination">
 				<c:if test="${pageMaker.prev}">
 					<li class='page-item'><a class='page-link'
-						href="list${pageMaker.makeSearch(pageMaker.startPage-1)}">이전</a></li>
+						href="adminPage${pageMaker.makeSearch(pageMaker.startPage-1)}">이전</a></li>
 				</c:if>
 
 				<c:forEach begin="${pageMaker.startPage }"
@@ -216,12 +257,12 @@ $(document).ready(function(){
 						<c:if test="${pageMaker.pvo.page == idx}"> active</c:if>
 						'>
 <%-- 						<c:out value="${pageMaker.pvo.page == idx?'class=page-item active':'' }"/>> --%>
-						<a class='page-link' href="list${pageMaker.makeSearch(idx)}">${idx}</a>
+						<a class='page-link' href="adminPage${pageMaker.makeSearch(idx)}">${idx}</a>
 					</li>
 				</c:forEach>
 
 				<c:if test="${pageMaker.next && pageMaker.endPage > 0}">
-					<li class='page-item'><a class='page-link' href="list${pageMaker.makeSearch(pageMaker.endPage+1)}">다음</a></li>
+					<li class='page-item'><a class='page-link' href="adminPage${pageMaker.makeSearch(pageMaker.endPage+1)}">다음</a></li>
 				</c:if>
 
 			</ul>

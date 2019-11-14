@@ -19,7 +19,7 @@ public class BoardServiceImpl implements BoardService {
 	public void regist(BoardVO board) throws Exception {
 		dao.create(board);
 		dao.updateReGroup(board.getBno());
-		System.out.println(board);
+//		System.out.println(board);
 	}
 	@Override
 	public BoardVO read(int bno) throws Exception {
@@ -57,6 +57,17 @@ public class BoardServiceImpl implements BoardService {
 	@Override
 	public BoardVO readNotice() throws Exception {
 		return dao.readNotice();
+	}
+	@Override
+	public int realDelete(BoardVO vo) throws Exception {
+		if(vo.getBno() == vo.getRe_group())
+			return dao.realDeleteAll(vo);
+		else
+			return dao.realDelete(vo);		
+	}
+	@Override
+	public int restore(int bno) throws Exception {
+		return dao.restore(bno);
 	}
 
 }

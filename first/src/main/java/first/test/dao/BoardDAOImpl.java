@@ -39,9 +39,12 @@ public class BoardDAOImpl implements BoardDAO {
 		session.delete(namespace+".delete", bno);
 	}
 	@Override
+	public int realDelete(BoardVO vo) throws Exception {
+		return session.delete(namespace+".realDelete", vo);		
+	}
+	@Override
 	public void updateViewcnt(int bno) throws Exception {
-		session.update(namespace+".updateViewcnt", bno);
-		
+		session.update(namespace+".updateViewcnt", bno);		
 	}
 	@Override
 	public List<BoardVO> listSearch(SearchCriteria pvo) throws Exception {
@@ -63,6 +66,14 @@ public class BoardDAOImpl implements BoardDAO {
 	@Override
 	public BoardVO readNotice() throws Exception {
 		return session.selectOne(namespace+".readNotice");
+	}
+	@Override
+	public int restore(int bno) throws Exception {
+		return session.update(namespace+".restore", bno);
+	}
+	@Override
+	public int realDeleteAll(BoardVO vo) throws Exception {
+		return session.delete(namespace+".realDeleteAll", vo);
 	}
 
 }

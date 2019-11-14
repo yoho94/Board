@@ -21,11 +21,11 @@
 	<form action="/login" method="post">
 		<div class="form-group">
 			<input type="text" class="form-control" placeholder="Username"
-				required="required" name="userId">
+				required="required" name="userId" onkeyup='spaceRemove($(this))'>
 		</div>
 		<div class="form-group">
 			<input type="password" class="form-control" placeholder="Password"
-				required="required" name="userPass">
+				required="required" name="userPass" onkeyup='spaceRemove($(this))'>
 		</div>
 		<input type="submit" class="btn btn-primary btn-block" value="Login">
 		<div class="form-footer">

@@ -67,7 +67,7 @@
 </head>
 <body>
 	<form role="form" method="post" action="modifyPage" id='boardForm'>
-		<input type="hidden" name="bno" value="${boardVO.bno}">
+		<input type="hidden" name="bno" value='${boardVO.bno}'>
 		<input type="hidden" name="title" value='${boardVO.title}'>
 		<input type="hidden" name="content" value='${boardVO.content}'>
 		<input type="hidden" name="writer" value="${boardVO.writer}">

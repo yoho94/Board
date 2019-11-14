@@ -40,6 +40,9 @@
 				OR content like concat('%', #{keyword}, '%')
 				OR writer like concat('%', #{keyword}, '%'))
 			</if>
+			<if test="searchType == 'del'.toString()">
+				AND title like concat('%', #{keyword}, '%') AND isDelete > 0
+			</if>
 		</if>
 	</sql>
 	
@@ -66,9 +69,17 @@
 	<update id='delete'>
 		UPDATE board_tbl SET isDelete = 1 where bno=#{bno}
 	</update>
+	
+	<update id='restore'>
+		UPDATE board_tbl SET isDelete = 0 where bno=#{bno}
+	</update>
 
 	<delete id="realDelete">
 		DELETE FROM board_tbl WHERE bno=#{bno}
+	</delete>
+	
+	<delete id="realDeleteAll">
+		DELETE FROM board_tbl WHERE re_group=#{bno}
 	</delete>
 	
 	<update id="update">
@@ -88,7 +99,7 @@
 	</insert>
 	
 	<select id="readNotice" resultType="first.test.vo.BoardVO">
-		SELECT * FROM board_tbl WHERE isNotice > 0 ORDER BY isNotice DESC, bno DESC limit 1;
+		SELECT * FROM board_tbl WHERE isNotice > 0 ORDER BY isNotice DESC, bno DESC limit 1
 	</select>
 	
 </mapper>

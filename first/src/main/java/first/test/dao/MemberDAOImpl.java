@@ -42,4 +42,15 @@ public class MemberDAOImpl implements MemberDAO {
 	public void withdrawal(MemberVO vo) throws Exception {
 		sql.delete(namespace + ".withdrawal", vo);
 	}
+	
+	// 아이디 검사
+	@Override
+	public int idCheck(String userId) throws Exception {
+		return sql.selectOne(namespace + ".idCheck", userId);
+	}
+	
+	@Override
+	public int nameCheck(String userName) throws Exception {
+		return sql.selectOne(namespace + ".nameCheck", userName);
+	}
 }

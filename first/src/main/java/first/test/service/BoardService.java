@@ -17,4 +17,6 @@ public interface BoardService {
 	public int listSearchCount(SearchCriteria cri) throws Exception; // 페이징 처리
 	public int reRegist(BoardVO vo, int obno) throws Exception;
 	public BoardVO readNotice() throws Exception;
+	public int realDelete(BoardVO vo) throws Exception;
+	public int restore(int bno) throws Exception;
 }

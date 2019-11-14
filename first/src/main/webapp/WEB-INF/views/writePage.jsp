@@ -30,9 +30,10 @@
 $(document).ready(function(){
 	var formObj = $("#writeForm");
 	
-	$("#ok").on("click", function(){		
+	$("#ok").on("click", function(){	
+		formObj.attr("target", opener.window.name);
 		formObj.submit();
-		$("#searchForm", opener.document).submit();
+// 		$("#searchForm", opener.document).submit();
 		self.opener = self;
 		window.close();
 	});

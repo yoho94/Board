@@ -327,10 +327,10 @@
 <!-- 							</div> -->
 <!-- 							<div class="or-seperator"><b>or</b></div> -->
 							<div class="form-group">
-								<input type="text" class="form-control" placeholder="Username" required="required" name="userId">
+								<input type="text" class="form-control" placeholder="Username" required="required" name="userId" onkeyup='spaceRemove($(this))'>
 							</div>
 							<div class="form-group">
-								<input type="password" class="form-control" placeholder="Password" required="required" name="userPass">
+								<input type="password" class="form-control" placeholder="Password" required="required" name="userPass" onkeyup='spaceRemove($(this))'>
 							</div>
 							<input type="submit" class="btn btn-primary btn-block" value="Login">
 							<div class="form-footer">
@@ -343,7 +343,12 @@
 			<li class="nav-item" id='join'>
 				<a href="/MemberJoin" class="nav-link">회원가입</a>
 			</li>
-		</c:if>			
+		</c:if>	
+		<c:if test="${loginVO.isAdmin == '1'}">
+			<li class="nav-item" id='adminPage'>
+				<a href="/adminPage" class="nav-link">게시물 관리</a>
+			</li>
+		</c:if>		
 		<c:if test="${loginVO != null}">
 			<li class="nav-item">
 				<a href="/logout" class="nav-link">로그아웃</a>
@@ -369,8 +374,15 @@
 			$("#home").addClass("active");
 		else if (activeTab == '/MemberJoin')
 			$("#join").addClass("active");
+		else if (activeTab == '/adminPage')			
+			$("#adminPage").addClass("active");
 		else
 			$("#board").addClass("active");
+		
+	    function spaceRemove(obj){
+	        var a = obj.val().replace(/ /gi, '');
+	        obj.val(a);
+	    }
 	</script>
 </body>
 </html>

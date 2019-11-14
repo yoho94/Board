@@ -10,4 +10,12 @@
 	<insert id="register">
 		INSERT INTO member(userId, userPass, userName) values(#{userId}, #{userPass}, #{userName})
 	</insert>
+	
+	<select id='idCheck' resultType="int">
+		SELECT count(*) FROM member WHERE userId=#{userId}
+	</select>
+	
+	<select id='nameCheck' resultType="int">
+		SELECT count(*) FROM member WHERE userName=#{userName}
+	</select>
 </mapper>

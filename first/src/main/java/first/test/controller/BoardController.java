@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.nhncorp.lucy.security.xss.XssPreventer;
 import com.oreilly.servlet.MultipartRequest;
 import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
@@ -94,10 +97,12 @@ public class BoardController {
 		
 		if(vo.getUserPass().equals(pass2)) {	
 			try {
+				vo.setUserId(vo.getUserId().trim());
+				vo.setUserName(vo.getUserId().trim());
 				memberService.register(vo);
 				model.addAttribute("msg", "회원가입 성공 !");
 			} catch (Exception e) {
-				model.addAttribute("msg", "회원가입 실패. 빈 값이 있습니다.");
+				model.addAttribute("msg", "회원가입 실패. 다시 시도해주세요.");
 			}
 			
 		}
@@ -107,6 +112,30 @@ public class BoardController {
 		
 		
 		return "/home";
+	}
+	
+	@RequestMapping(value = "/idCheck", method = RequestMethod.POST)
+	public @ResponseBody String idCheck(String userId) {
+		int tmp;
+		try {
+			tmp = memberService.idCheck(userId.trim());
+		} catch(Exception e) {
+			System.out.println(e.toString());
+			tmp = 1;
+		}
+		return tmp+"";
+	}
+	
+	@RequestMapping(value = "/nameCheck", method = RequestMethod.POST)
+	public @ResponseBody String nameCheck(String userName) {
+		int tmp;
+		try {
+			tmp = memberService.nameCheck(userName.trim());
+		} catch(Exception e) {
+			System.out.println(e.toString());
+			tmp = 1;
+		}
+		return tmp+"";
 	}
 
 	@RequestMapping(value = "/list")
@@ -121,8 +150,10 @@ public class BoardController {
 		System.out.println("ctrl" + service.listSearch(pvo));
 		model.addAttribute("pageMaker", pageMaker);
 		
-		BoardVO notice = service.readNotice();
-		model.addAttribute("noticeVO", notice);
+		if(pvo.getPage() == 1) {
+			BoardVO notice = service.readNotice();
+			model.addAttribute("noticeVO", notice);
+		}
 	}
 	
 	@RequestMapping(value = "/readPage" , method = RequestMethod.POST)
@@ -130,6 +161,9 @@ public class BoardController {
 		BoardVO vo = service.read(bno);
 		service.updateViewcnt(bno);
 		
+		String clean = XssPreventer.escape(vo.getTitle());
+		vo.setTitle(clean);
+//		System.out.println(clean);
 		model.addAttribute("boardVO", vo);
 	}
 	
@@ -157,9 +191,46 @@ public class BoardController {
 		return "redirect:/list";
 	}
 	
+	@RequestMapping(value = "/adminRemoveAction", method = RequestMethod.POST)
+	public String adminRemoveAction(@RequestParam("bno") int bno, SearchCriteria pvo, RedirectAttributes rttr) throws Exception{
+		service.remove(bno);
+		
+		rttr.addAttribute("page", pvo.getPage());
+		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
+		rttr.addAttribute("searchType", pvo.getSearchType());
+		rttr.addAttribute("keyword", pvo.getKeyword());
+		
+		return "redirect:/adminPage";
+	}
+	
+	@RequestMapping(value = "/realRemoveAction", method = RequestMethod.POST)
+	public String realRemoveAction(BoardVO vo, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
+		service.realDelete(vo);
+		
+		rttr.addAttribute("page", pvo.getPage());
+		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
+		rttr.addAttribute("searchType", pvo.getSearchType());
+		rttr.addAttribute("keyword", pvo.getKeyword());
+		
+		return "redirect:/adminPage";
+	}
+	
+	@RequestMapping(value = "/restore", method = RequestMethod.POST)
+	public String restore(BoardVO vo, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
+		service.restore(vo.getBno());
+		
+		rttr.addAttribute("page", pvo.getPage());
+		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
+		rttr.addAttribute("searchType", pvo.getSearchType());
+		rttr.addAttribute("keyword", pvo.getKeyword());
+		
+		return "redirect:/adminPage";
+	}
+	
 	@RequestMapping(value = "/modifyPage", method = RequestMethod.POST)
 	public void modifyPage(@ModelAttribute("boardVO") BoardVO vo, @ModelAttribute("pvo") SearchCriteria pvo) {
-		
+		String clean = XssPreventer.escape(vo.getTitle());
+		vo.setTitle(clean);
 	}
 	
 	@RequestMapping(value = "/modifyPageAction", method = RequestMethod.POST)
@@ -176,7 +247,8 @@ public class BoardController {
 	
 	@RequestMapping(value = "/reRegister", method = RequestMethod.POST)
 	public void reRegister(@ModelAttribute("oBoardVO")BoardVO vo, @ModelAttribute("pvo") SearchCriteria pvo) {
-		
+		String clean = XssPreventer.escape(vo.getTitle());
+		vo.setTitle(clean);
 	}
 	
 	@RequestMapping(value = "/reRegisterAction", method = RequestMethod.POST)
@@ -265,5 +337,29 @@ public class BoardController {
         mv.addObject("error", map);
         return mv;
     }
+	
+	@RequestMapping(value ="/adminPage")
+	public String adminPage(HttpServletRequest request, Model model, @ModelAttribute("pvo") SearchCriteria pvo) throws Exception {
+        HttpSession session = request.getSession();
+        MemberVO loginVO = (MemberVO) session.getAttribute("loginVO"); 
+
+        if(loginVO.getIsAdmin() != 1){
+        	model.addAttribute("msg", "관리자만 접근 가능합니다.");
+        	return "/home";
+        }
+        
+		model.addAttribute("list", service.listSearch(pvo));
+
+		PageMaker pageMaker = new PageMaker();
+		pageMaker.setPvo(pvo);
+
+		pageMaker.setTotalCount(service.listSearchCount(pvo));
+		model.addAttribute("pageMaker", pageMaker);
+		
+//		BoardVO notice = service.readNotice();
+//		model.addAttribute("noticeVO", notice);
+        
+        return "/adminPage";
+	}
 
 }
