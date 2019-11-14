@@ -207,6 +207,8 @@ $(document).ready(function(){
 			<ul class="pagination">
 				<c:if test="${pageMaker.prev}">
 					<li class='page-item'><a class='page-link'
+						href="list${pageMaker.makeSearch(1)}">처음</a></li>
+					<li class='page-item'><a class='page-link'
 						href="list${pageMaker.makeSearch(pageMaker.startPage-1)}">이전</a></li>
 				</c:if>
 
@@ -222,6 +224,7 @@ $(document).ready(function(){
 
 				<c:if test="${pageMaker.next && pageMaker.endPage > 0}">
 					<li class='page-item'><a class='page-link' href="list${pageMaker.makeSearch(pageMaker.endPage+1)}">다음</a></li>
+					<li class='page-item'><a class='page-link' href="list${pageMaker.makeSearch(pageMaker.totalPage)}">마지막</a></li>
 				</c:if>
 
 			</ul>

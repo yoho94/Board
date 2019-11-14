@@ -10,13 +10,24 @@ public class PageMaker {
 	private int totalCount;
 	private int startPage;
 	private int endPage;
+	private int totalPage;
 	private boolean prev;
 	private boolean next;
 	
 	private int displayPageNum = 10;
 	
-	private PageVO pvo;
+	private PageVO pvo;	
 	
+
+
+	public int getTotalPage() {
+		return totalPage;
+	}
+
+	public void setTotalPage(int totalPage) {
+		this.totalPage = totalPage;
+	}
+
 	public int getTotalCount() {
 		return totalCount;
 	}
@@ -41,6 +52,15 @@ public class PageMaker {
 		
 		next = endPage * pvo.getPerPageNum() >= totalCount ? false : true;
 		
+		
+		totalPage = totalCount / pvo.getPerPageNum();
+
+
+		if (totalCount % pvo.getPerPageNum() > 0) {
+		
+		    totalPage++;
+		
+		}
 	}
 
 	public String makeQuery(int page) {
