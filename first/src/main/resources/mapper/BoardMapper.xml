@@ -102,4 +102,8 @@
 		SELECT * FROM board_tbl WHERE isNotice > 0 ORDER BY isNotice DESC, bno DESC limit 1
 	</select>
 	
+	<select id="selectDate" resultType="first.test.vo.BoardVO">
+		SELECT regDate FROM board_tbl order by regDate ASC;
+	</select>
+	
 </mapper>

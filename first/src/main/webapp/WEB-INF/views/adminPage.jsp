@@ -106,15 +106,17 @@ $(document).ready(function(){
 </div>
 		<table class='table table-striped'>
 			<colgroup>
-				<col width="8%">
+				<col width="5%">
+				<col width="5%">
 				<col>
 				<col width="10%">
 				<col width="15%">
-				<col width="8%">
+				<col width="7%">
 				<col width="20%">
 			</colgroup>
 			<thead>
 				<tr>
+					<th>순번</th>
 					<th>번호</th>
 					<th>제목</th>
 					<th>작성자</th>
@@ -123,8 +125,9 @@ $(document).ready(function(){
 					<th>복구, 삭제, 완전삭제</th>
 				</tr>
 			</thead>
-			<c:forEach items="${list}" var="boardVO">
+			<c:forEach items="${list}" var="boardVO" varStatus="status">
 				<tr>
+					<td>${(pageMaker.totalCount - status.index) - ( (pageMaker.pvo.page - 1)  *  pageMaker.pvo.perPageNum ) }</td>
 					<td>${boardVO.bno}</td>
 					<td>
 						<form name='readForm' action='/readPage' method='post'
@@ -247,6 +250,7 @@ $(document).ready(function(){
 		<div class='col-md-offset-3'>
 			<ul class="pagination">
 				<c:if test="${pageMaker.prev}">
+					<li class='page-item'><a class='page-link' href="adminPage${pageMaker.makeSearch(1)}">처음</a></li>
 					<li class='page-item'><a class='page-link'
 						href="adminPage${pageMaker.makeSearch(pageMaker.startPage-1)}">이전</a></li>
 				</c:if>
@@ -263,6 +267,7 @@ $(document).ready(function(){
 
 				<c:if test="${pageMaker.next && pageMaker.endPage > 0}">
 					<li class='page-item'><a class='page-link' href="adminPage${pageMaker.makeSearch(pageMaker.endPage+1)}">다음</a></li>
+					<li class='page-item'><a class='page-link' href="adminPage${pageMaker.makeSearch(pageMaker.totalPage)}">마지막</a></li>
 				</c:if>
 
 			</ul>

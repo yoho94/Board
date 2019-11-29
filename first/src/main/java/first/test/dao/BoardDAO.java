@@ -21,4 +21,5 @@ public interface BoardDAO {
 	public BoardVO readNotice() throws Exception;
 	public int restore(int bno) throws Exception;
 	public int realDeleteAll(BoardVO vo) throws Exception;
+	public List<BoardVO> selectDate() throws Exception;
 }

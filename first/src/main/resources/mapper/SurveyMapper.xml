@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="first.test.mapper.SurveyMapper">	
+	<!-- 설문조사 문항 가져오기 -->
+	<select id="selectQuestion" parameterType="hashMap" resultType="first.test.vo.SurveyQuestionVO">
+		SELECT 
+		    sq.question_order,
+		    sq.question_depth,
+		    sq.question_code,
+		    sq.title,
+		    sq.type,
+		    sq.is_free,
+		    sq.number,
+		    cc.category_name
+		FROM
+		    survey_question AS sq
+		        LEFT JOIN
+		    category_code AS cc ON cc.category_code = sq.category_code
+		     where survey_seq = #{seq}
+		ORDER BY question_order ASC , question_depth ASC
+		LIMIT #{page} , 5
+	</select>
+	
+	<!-- 설문조사 문항 코드(문항 선택지) 가져오기 -->
+	<select id="selectQuestionCode" resultType="first.test.vo.QuestionCodeVO">
+		SELECT 
+		    question_name
+		FROM
+		    question_code
+		WHERE
+		    parent_code = #{code}
+		ORDER BY question_code ASC;	
+	</select>
+
+	<!-- 설문조사 메인 화면(인포) 가져오기 -->
+	<select id="selectInfo" resultType="first.test.vo.SurveyInfoVO">
+		select survey_seq, agency_name, start_date, end_date, result_date, survey_head, survey_content,
+		survey_foot from survey_info where survey_seq = #{seq};
+	</select>
+	
+	<!-- 설문조사 문항 개수 가져오기 -->
+	<select id='selectQuestionCount' resultType='int'>
+		select max(question_order) question_count from survey_question where survey_seq = #{seq};
+	</select>
+	
+	<!-- 설문조사 문항 개수(세부 문항 포함, 부모 문항 미포함) 가져오기 -->
+	<select id="selectQuestionCount2" resultType='int'>
+		select count(*) from survey_question where survey_seq = #{seq} AND question_depth >= 0;
+	</select>
+	
+	<!-- 설문조사 자식 개수 가져오기 -->
+	<select id="selectQuestionDepthCount" resultType='int'>
+		select max(question_depth) question_count from survey_question where survey_seq = #{survey_seq} and question_order = #{question_order};
+	</select>
+	
+	<!-- 사용자가 응답한 답 넣기 -->
+	<insert id="insertAnswer" parameterType="first.test.vo.SurveyAnswerVO">
+		INSERT INTO `survey_answer`
+		(`survey_seq`, `question_order`, `question_depth`,
+		`user_id`, `subjective_answer`, `choice_answer`)
+		VALUES
+		(#{survey_seq},#{question_order},#{question_depth},
+		#{user_id},#{subjective_answer},#{choice_answer});				
+	</insert>
+	
+	<!-- 사용자가 응답한 답 개수 가져오기 -->
+	<select id="selectAnswerCount" parameterType="hashMap" resultType="int">
+		select count(*) from survey_answer where survey_seq = #{seq} and user_id = #{id};
+	</select>
+	
+	<!-- 설문조사 완료한 사용자의 수 -->
+	<select id="selectAnswerPeopleCount" resultType="int">
+		SELECT 
+		    COUNT(c.count) answer_people_count
+		FROM
+		    (SELECT 
+		        COUNT(*) count, user_id
+		    FROM
+		        survey_answer
+		    WHERE
+		        survey_seq = #{survey_seq}
+		    GROUP BY user_id
+		    HAVING count = #{question_count}) AS c
+	</select>
+	
+	<!-- 사용자가 응답한 값 가져오기 -->
+	<select id="selectAnswerList" parameterType="hashMap" resultType="first.test.vo.SurveyAnswerVO">
+		SELECT 
+		    question_order,
+		    question_depth,
+		    subjective_answer,
+		    choice_answer
+		FROM
+		    survey_answer
+		WHERE
+		    survey_seq = #{seq} AND user_id = #{id}
+		ORDER BY question_order ASC , question_depth ASC
+		LIMIT #{page} , 5	
+	</select>
+	
+	<!-- 사용자가 응답한 값 업데이트 -->
+	<update id="updateAnswer" parameterType="first.test.vo.SurveyAnswerVO">
+		UPDATE survey_answer 
+		SET 
+		    subjective_answer = #{subjective_answer},
+		    choice_answer = #{choice_answer},
+		    mod_date = NOW()
+		WHERE
+		    survey_seq = #{survey_seq} AND question_order = #{question_order}
+		  	AND question_depth = #{question_depth}
+		   	AND user_id = #{user_id}	
+	</update>
+	
+	<!-- 설문조사 인포 리스트 가져오기 -->
+	<select id="selectInfoList" resultType="first.test.vo.SurveyInfoVO">
+		SELECT 
+		    si.survey_seq,
+		    si.agency_name,
+		    si.start_date,
+		    si.end_date,
+		    qc.question_count
+		FROM
+		    survey_info AS si
+		        LEFT JOIN
+		    (SELECT 
+		        COUNT(*) question_count, survey_seq AS seq
+		    FROM
+		        survey_question
+		    WHERE
+		        question_depth >= 0
+		        GROUP BY seq) AS qc ON qc.seq = si.survey_seq	
+		WHERE si.isUsing = 'Y' AND si.end_date > now() AND now() > si.start_date
+	</select>
+	
+	<!-- 설문 문제별 결과 가져오기 -->
+	<select id="selectAnswerChart" resultType="first.test.vo.SurveyAnswerVO">
+		SELECT 
+		    sa.question_order,
+		    sa.question_depth,
+		    sa.subjective_answer,
+		    sa.choice_answer
+		FROM
+		    survey_answer AS sa
+		        INNER JOIN
+		    (SELECT 
+		        COUNT(*) count, user_id
+		    FROM
+		        survey_answer
+		    WHERE
+		        survey_seq = 1
+		    GROUP BY user_id
+		    HAVING count = 22) AS a ON a.user_id = sa.user_id
+		        AND question_order = 1
+		        AND question_depth = 0
+	</select>
+	
+	<!-- 설문 인포 작성하기 -->
+	<insert id="insertInfo" useGeneratedKeys="true" keyProperty="survey_seq">
+		insert into survey_info
+		(admin_id, agency_name, start_date, end_date, result_date, 
+		survey_head, survey_content, survey_foot) 
+		values 
+		(#{admin_id}, #{agency_name}, #{start_date}, #{end_date}, #{result_date},
+		#{survey_head}, #{survey_content}, #{survey_foot})
+	</insert>
+	
+	<!-- 설문 인포 수정하기 -->
+	<update id="updateInfo">
+		UPDATE `survey_info`
+		SET
+		`admin_id` = #{admin_id},
+		`agency_name` = #{agency_name},
+		`start_date` = #{start_date},
+		`end_date` = #{end_date},
+		`result_date` = #{result_date},
+		`survey_head` = #{survey_head},
+		`survey_content` = #{survey_content},
+		`survey_foot` = #{survey_foot},
+		`mod_date` = #{mod_date}
+		WHERE `survey_seq` = #{survey_seq};
+	</update>
+	
+	<!-- 카테고리 추가 -->
+	<insert id="insertCategory">
+		insert into category_code(category_name) values(#{category_name})
+	</insert>
+	
+	<!-- 문항코드 추가 -->
+	<insert id="insertQuestionCode">
+		insert into question_code(parent_code, question_name) values(#{parent_code}, #{question_name})
+	</insert>
+	
+	<!-- 카테고리 가져오기 -->
+	<select id="selectCategory" resultType="first.test.vo.CategoryVO">
+		SELECT 
+		    category_code, category_name
+		FROM
+		    category_code	
+	</select>
+	
+	<!-- 부모문항코드 가져오기 -->
+	<select id="selectParentCode" resultType="first.test.vo.QuestionCodeVO">
+		SELECT 
+		    question_name, question_code, parent_code
+		FROM
+		    question_code
+		WHERE
+		    parent_code = 0
+	</select>
+	
+	<!-- 문항 추가하기 -->
+	<insert id="insertQuestion">
+		insert into survey_question
+		(survey_seq, question_order, question_depth, 
+		category_code, question_code, title, type, number, is_free)
+		values 
+		(#{survey_seq}, #{question_order}, #{question_depth}, #{category_code}, 
+		#{question_code}, #{title}, #{type}, #{number}, #{is_free})
+	</insert>
+	
+	<!-- 설문조사 메인 화면(인포) 가져오기 -->
+	<select id="selectAdminInfo" resultType="first.test.vo.SurveyInfoVO">
+		select * from survey_info where survey_seq = #{seq};
+	</select>
+	
+	<!-- 관리를 위한 목록 불러오기 -->
+	<select id="selectAdminList" resultType="first.test.vo.SurveyInfoVO">
+		SELECT 
+		    si.*,
+		    qc.question_count
+		FROM
+		    survey_info AS si
+		        LEFT JOIN
+		    (SELECT 
+		        COUNT(*) question_count, survey_seq AS seq
+		    FROM
+		        survey_question
+		    WHERE
+		        question_depth >= 0
+		        GROUP BY seq) AS qc ON qc.seq = si.survey_seq	
+	</select>
+	
+	<!-- 설문 사용하기 -->
+	<update id="updateUsing">
+		UPDATE survey_info SET isUsing = 'Y', mod_date = now() WHERE survey_seq = #{seq}
+	</update>
+	
+	<!-- 설문 미사용하기 -->
+	<update id="updateUnUsing">
+		UPDATE survey_info SET isUsing = 'N', mod_date = now() WHERE survey_seq = #{seq}
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionOrder">
+		UPDATE survey_question SET question_order = question_order + 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order >= #{question_order}
+		ORDER BY question_order DESC
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionOrderMinToMax">
+		UPDATE survey_question SET question_order = question_order - 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order >= #{originalOrder} AND #{targetOrder} >= question_order
+		ORDER BY question_order ASC
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionOrderMaxToMin">
+		UPDATE survey_question SET question_order = question_order + 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order >= #{targetOrder} AND #{originalOrder} >= question_order
+		ORDER BY question_order DESC
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionDepth">
+		UPDATE survey_question SET question_depth = question_depth + 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order = #{question_order} AND question_depth >= #{question_depth}
+		ORDER BY question_order DESC, question_depth DESC
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionDepthMinToMax">
+		UPDATE survey_question 
+		SET question_depth = question_depth - 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order = #{question_order} 
+		AND question_depth >= #{originalDepth} AND #{targetDepth} >= question_depth
+		ORDER BY question_depth ASC
+	</update>
+	
+	<!-- 문항 순서 수정 -->
+	<update id="updateQuestionDepthMaxToMin">
+		UPDATE survey_question 
+		SET question_depth = question_depth + 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order = #{question_order} 
+		AND question_depth >= #{targetDepth} AND #{originalDepth} >= question_depth
+		ORDER BY question_depth DESC
+	</update>
+	
+	<!-- 문항 삭제 -->
+	<delete id="deleteQuestionO">
+		DELETE FROM survey_question WHERE 
+		survey_seq = #{survey_seq} AND question_order = #{question_order}
+	</delete>
+	
+	<!-- 문항 삭제 -->
+	<delete id="deleteQuestionD">
+		DELETE FROM survey_question WHERE 
+		survey_seq = #{survey_seq} AND question_order = #{question_order} AND question_depth = #{question_depth}
+	</delete>
+	
+	<!-- 문항 삭제 후 순서 수정 -->
+	<update id="deleteQuestionOrder">
+		UPDATE survey_question SET question_order = question_order - 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order > #{question_order}
+		ORDER BY question_order ASC
+	</update>
+	
+	<!-- 문항 삭제 후 순서 수정 -->
+	<update id="deleteQuestionDepth">
+		UPDATE survey_question SET question_depth = question_depth - 1, mod_date = now()
+		WHERE survey_seq = #{survey_seq} AND question_order = #{question_order} AND question_depth > #{question_depth}
+		ORDER BY question_depth ASC
+	</update>
+	
+	<!-- 문항 리스트 가져오기 -->
+	<select id="selectQuestionList" resultType="first.test.vo.SurveyQuestionVO">
+		SELECT 
+		    sq.*, cc.category_name, qc.question_name
+		FROM
+		    survey_question AS sq
+		        LEFT JOIN
+		    category_code AS cc ON cc.category_code = sq.category_code
+		        LEFT JOIN
+		    question_code AS qc ON qc.question_code = sq.question_code
+		WHERE
+		    survey_seq = #{seq}
+		ORDER BY question_order ASC , question_depth ASC
+	</select>
+	
+	<!-- 문항 수정 -->
+	<update id="updateQuestion">
+		UPDATE `survey_question`
+		SET
+		`survey_seq` = #{survey_seq },
+		`question_order` = #{question_order },
+		`question_depth` = #{question_depth },
+		`category_code` = #{category_code },
+		`question_code` = #{question_code },
+		`title` = #{title },
+		`type` = #{type },
+		`number` = #{number},
+		`mod_date` = now(),
+		`is_free` = #{is_free }
+		WHERE `survey_seq` = #{survey_seq} AND `question_order` = #{question_order} AND `question_depth` = #{question_depth};
+	</update>
+	
+	<!-- 카테고리 삭제 -->
+	<delete id="deleteCategory">
+		DELETE FROM category_code WHERE category_code = #{category_code}
+	</delete>
+	
+	<!-- 문항 삭제 -->
+	<delete id="deleteParentCode">
+		DELETE FROM question_code WHERE question_code = #{question_code}
+	</delete>
+	
+</mapper>

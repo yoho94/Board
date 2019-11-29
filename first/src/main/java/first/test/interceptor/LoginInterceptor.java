@@ -15,9 +15,11 @@ public class LoginInterceptor extends HandlerInterceptorAdapter{
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         
+//    	String userAgent = request.getHeader("User-Agent");
+//    	System.out.println(userAgent);
         HttpSession session = request.getSession();
         MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
- 
+        
 
         if(loginVO == null){
             response.sendRedirect("/");

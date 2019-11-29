@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="first.test.mapper.DashBoardMapper">
+	<insert id="insert">
+		insert into dashBoard(id, type, boardOrder, width) values(#{id}, #{type}, #{boardOrder}, #{width})
+	</insert>
+	
+	<update id="update">
+		update dashBoard set type = #{type}, boardOrder = #{boardOrder}, width = #{width} where seq = #{seq}
+	</update>
+	
+	<update id="updateOrder">		
+		update dashBoard set boardOrder = boardOrder + 1
+		where id = #{id} and boardOrder >= #{boardOrder}
+	</update>
+	
+	<select id="selectBoard" resultType="first.test.vo.DashBoardVO">
+		select * from dashBoard where id = #{userId}
+		order by boardOrder ASC
+	</select>
+	
+	<delete id="delete">
+		delete from dashBoard where seq = #{seq}
+	</delete>
+
+</mapper>

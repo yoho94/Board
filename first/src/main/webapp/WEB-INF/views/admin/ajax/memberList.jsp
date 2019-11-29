@@ -1,0 +1,108 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<table class='table table-bordered table-hover'>
+	<colgroup>
+		<col width="20%">
+		<col>
+		<col width="15%">
+		<col width="15%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th>아이디</th>
+			<th>이름</th>
+			<th>관리자 / 사용자</th>
+			<th>사 용 / 미사용</th>
+		</tr>
+	</thead>
+	<tbody>
+	<c:forEach items="${list}" var="memberVO" varStatus="status">
+		<tr>
+			<td>${memberVO.userId}</td>
+			<td>${memberVO.userName}</td>
+			<td>
+			<c:if test="${memberVO.isAdmin == '1'}">관리자</c:if>
+			<c:if test="${memberVO.isAdmin == '0'}">사용자</c:if>
+			</td>
+			<td>
+			<c:if test="${memberVO.isUsing == 'Y'.charAt(0)}">사 용</c:if>
+			<c:if test="${memberVO.isUsing == 'N'.charAt(0)}">미사용</c:if>						
+			</td>
+		</tr>
+	</c:forEach>
+	</tbody>
+</table>
+
+<div id='memberModal' class="modal fade" tabindex="-1" role="dialog"
+	aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">회원 상세 보기</h5>
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="details">
+				</div>
+				<hr>
+				<div class="modify text-center">
+				<form id='memberForm'>
+					<label>권한 변경
+						<select name='isAdmin'>
+							<option value='0'>사용자</option>
+							<option value='1'>관리자</option>
+						</select>
+					</label>
+					<label>사용 / 미사용 변경
+						<select name='isUsing'>
+							<option value='Y'>사용</option>
+							<option value='N'>미사용</option>
+						</select>
+					</label>
+				</form>					
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-success" id='saveBtn'>변경</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>	
+
+	$('table tbody tr').click(function() {
+		var str = '';
+		var tr = $(this);
+		var td = tr.children();
+		
+		td.each(function(i) {
+// 			console.log(tr);
+			str += $('th').eq(i).text() + " : " + td.eq(i).text() + "<br>";
+		});
+		
+		$('#adminSelect ')
+		
+		$('#saveBtn').on('click', function() {
+			$.ajax({
+				type : 'POST',
+				url : "/admin/member/change.ajax",
+				data : "userId=" + td.eq(0).text() + "&" + $('#memberForm').serialize(),
+				async: false,
+				dataType : "text",
+				success : function(data) {
+					hideModal();
+					adminMember();
+				}
+			});
+		});		
+		
+		$('.modal .modal-body .details').html(str);
+		$('.modal').modal('show');
+	});
+</script>

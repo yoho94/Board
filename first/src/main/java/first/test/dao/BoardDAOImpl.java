@@ -75,5 +75,9 @@ public class BoardDAOImpl implements BoardDAO {
 	public int realDeleteAll(BoardVO vo) throws Exception {
 		return session.delete(namespace+".realDeleteAll", vo);
 	}
+	@Override
+	public List<BoardVO> selectDate() throws Exception {
+		return session.selectList(namespace+".selectDate");
+	}
 
 }

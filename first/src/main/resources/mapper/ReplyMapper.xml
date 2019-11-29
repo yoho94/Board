@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="first.test.mapper.ReplyMapper">
+
+	<!-- 댓글 조회 --> 
+	<select id="readReply" resultType="first.test.vo.ReplyVO">
+		select *
+		from myReply
+		where bno = #{bno} and rno > 0 ORDER BY re_group asc, re_sorts asc
+	</select>
+
+	<!-- 댓글 작성 -->
+<!-- 	<insert id="writeReply"> -->
+<!-- 		<selectKey keyProperty="rno" order="BEFORE" resultType="int"> -->
+<!-- 			SELECT myReply_seq.NEXTVAL from dual -->
+<!-- 		</selectKey> -->
+<!-- 		insert into -->
+<!-- 		myReply(bno, rno, content, writer, re_group, re_sorts) -->
+<!-- 		values(#{bno}, #{rno}, #{content}, #{writer}, #{rno}, #{rno}) -->
+<!-- 	</insert> -->
+
+	<insert id="writeReply" useGeneratedKeys="true" keyProperty="rno">
+		insert into
+		myReply(bno, content, writer)
+		values(#{bno}, #{content}, #{writer})
+	</insert>
+	
+	<update id="writeReplyUpdate">
+		UPDATE myReply SET re_sorts = #{rno}, re_group = #{rno} WHERE rno = #{rno}
+	</update>
+	
+	<update id="reUpdate">
+		UPDATE myReply SET re_sorts = re_sorts + 1
+		WHERE re_group = #{re_group} AND re_sorts > #{re_sorts}
+	</update>
+
+	<insert id="reInsert">
+		INSERT INTO myReply(bno, content, writer, re_group, re_sorts, re_depth)
+		VALUES(#{bno}, #{content}, #{writer}, #{re_group}, #{re_sorts}, #{re_depth})
+	</insert>
+
+	<!-- 특정 댓글 조회 -->
+	<select id="readReplySelect"
+		resultType="first.test.vo.ReplyVO">
+		select *
+		from myReply
+		where rno = #{rno}
+	</select>
+
+	<!-- 댓글 수정 -->
+	<update id="updateReply">
+		update myReply
+		set
+		content = #{content}
+		where rno = #{rno}
+	</update>
+
+	<!-- 댓글 삭제 -->
+	<delete id="deleteReply">
+		delete from myReply
+		where rno = #{rno}
+	</delete>
+	
+	<delete id="deleteAll">
+		delete from myReply
+		where bno = #{bno}
+	</delete>
+
+</mapper>

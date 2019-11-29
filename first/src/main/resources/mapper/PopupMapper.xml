@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="first.test.mapper.PopupMapper">
+	
+	<!-- 관리 팝업 목록 가져오기 -->
+	<select id="adminPopupList" resultType="first.test.vo.PopupVO">
+		SELECT * FROM popup;
+	</select>
+	
+	<!-- 팝업 상세보기 -->
+	<select id="selectPopupOne" resultType="first.test.vo.PopupVO">
+		SELECT * FROM popup WHERE seq = #{seq}
+	</select>
+	
+	<!-- 지정한 기간에 맞는 팝업 목록 가져오기 -->
+	<select id="mainPopupList" resultType="first.test.vo.PopupVO">
+		SELECT * FROM popup WHERE isUsing = 'Y' AND end_date > now() AND now() > start_date
+	</select>
+	
+	<!-- 팝업 생성 -->
+	<insert id="insertPopup">
+		INSERT INTO popup(start_date, end_date, title, text, image, link, height, width, write_id)
+		VALUES(#{start_date}, #{end_date}, #{title}, #{text}, #{image}, #{link}, #{height}, #{width}, #{write_id})
+	</insert>
+	
+	<!-- 팝업 수정 -->
+	<update id="updatePopup">
+		UPDATE popup SET start_date = #{start_date}, end_date = #{end_date},
+		title = #{title}, text = #{text}, image = #{image}, link = #{link}, mod_date = now(),
+		height = #{height}, width = #{width}, mod_id = #{mod_id}
+		WHERE seq = #{seq}
+	</update>
+	
+	<!-- 팝업 사용 미사용 -->
+	<update id="updatePopupUsing">
+		UPDATE popup SET isUsing = #{isUsing}
+		WHERE seq = #{seq}
+	</update>
+	
+	<!-- 팝업 삭제 -->
+	<delete id="deletePopup">
+		DELETE FROM popup WHERE seq = #{seq}
+	</delete>
+
+</mapper>

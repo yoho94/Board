@@ -22,6 +22,145 @@
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/15.0.0/classic/ckeditor.js"></script>
 <script>
+function fn_disply(rno) {
+	var con = document.getElementById("reDiv"+rno);
+    if(con.style.display=='none'){
+        con.style.display = 'block';
+    }else{
+        con.style.display = 'none';
+    }
+}
+
+function fn_reComment(rno){
+    
+    $.ajax({
+        type:'POST',
+        url : "<c:url value='/board/addReComment.do'/>",
+        data:$("#reCommentForm" + rno).serialize(),
+        success : function(data){
+            if(data=="success")
+            {
+                getCommentList();
+                $("textarea[id='content']").val("");
+            }
+        },
+        error:function(request,status,error){
+            //alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+       }
+        
+    });
+}
+
+/*
+ * 댓글 등록하기(Ajax)
+ */
+function fn_comment(code){
+    
+    $.ajax({
+        type:'POST',
+        url : "<c:url value='/board/addComment.do'/>",
+        data:$("#commentForm").serialize(),
+        success : function(data){
+            if(data=="success")
+            {
+                getCommentList();
+                $("textarea[id='content']").val("");
+            }
+        },
+        error:function(request,status,error){
+            //alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+       }
+        
+    });
+}
+
+/**
+ * 댓글 불러오기(Ajax)
+ */
+function getCommentList(){
+    
+    $.ajax({
+        type:'GET',
+        url : "<c:url value='/board/commentList.do'/>",
+        dataType : "json",
+        data:$("#commentForm").serialize(),
+        contentType: "application/x-www-form-urlencoded; charset=UTF-8", 
+        success : function(data){
+            
+            var html = "";
+            var cCnt = data.length;
+            var margin = 0;
+            var icon = "";
+//	            console.log(data);
+            
+            if(data.length > 0){
+                
+                for(i=0; i<data.length; i++){
+                	margin = 0;
+                	icon = "";
+                	for(j=0; j<data[i].re_depth; j++) {
+                		margin += 20;
+                		icon = "<img src='/resources/img/icon_re.gif' align='absmiddle' alt='' />";
+                	}
+                	html += "<div style='margin-left: "+margin+"px'>";
+                	html += "<li>";
+                	html += "<p>";
+                	html += icon;
+                	html += "<span class='glyphicon glyphicon-user'></span>";
+                	html += data[i].writer + " (" + data[i].regDate + ")";
+                	html += "</p>";
+                	html += "<p class='bg-info'>"+ data[i].content + "</p>";
+                	html += "<div class='form-group'>";
+                	html += "<button type='button' class='replyUpdate btn btn-warning btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='mod"+data[i].rno+"'>수정</button>";
+                	html += "<button type='button' class='replyDelete btn btn-danger btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='del"+data[i].rno+"'>삭제</button>";
+                	html += "<button type='button' class='repWrite btn btn-info btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='rep"+data[i].rno+"' onClick='fn_disply("+data[i].rno+")'>답글</button>";
+         			html += "<div id='reDiv"+ data[i].rno +"'' style='display: none;'>";
+         			html += "<form id='reCommentForm"+ data[i].rno +"' method='post'>";
+         			html += '<input type="hidden" id="bno" name="bno" value="${boardVO.bno}" readonly="readonly" />';
+         			html += '<input type="hidden" id="orno" name="orno" value="'+data[i].rno+'" readonly="readonly" />';
+         			html += "<div class='form-group'>";
+         			html += "<label for='writer' class='col-sm-2 control-label'>작성자</label>";
+         			html += "<div class='col-sm-10'>";
+         			html += '<input type="text" id="writer" name="writer" class="form-control" value="${loginVO.userName}" readonly/>';
+         			html += "</div>";
+         			html += "</div>";
+         			html += '<div class="form-group">';
+         			html += '<label for="content" class="col-sm-2 control-label">댓글 내용</label>';
+         			html += '<div class="col-sm-10">';
+         			html += '<textarea id="content" name="content" class="form-control" ></textarea>';
+         			html += '</div></div>';
+         			html += '<div class="form-group"> <div class="col-sm-offset-2 col-sm-10">';
+         			html += '<button type="button" class="repSubmit btn btn-success" onClick="fn_reComment('+data[i].rno+')">작성</button>';
+         			html += '</div></div>';
+         			html += "</form>";
+         			html += "</div>";
+                	html += "</div>";
+                	html += "</li>";
+                    html += "</div>";
+                }
+                
+            } else {
+            	
+            	html += "<li>";
+            	html += "<p>";
+            	html += "<h6><b>등록된 댓글이 없습니다.</b></h6>";
+            	html += "</p>";
+            	html += "</li>"
+                
+            }
+            
+//	            $("#cCnt").html(cCnt);
+            $("#replyList").html(html);
+            
+        },
+        error:function(request,status,error){
+            
+       }
+        
+    });
+}
+
+
 	$(document).ready(function(){
 		
 		var formObj = $("#boardForm");
@@ -61,6 +200,15 @@
 // 			formObj.attr("action", "/list");
 // 			formObj.submit();
 		});
+		
+		
+		 
+		/**
+		 * 초기 페이지 로딩시 댓글 불러오기
+		 */		    
+		 getCommentList();
+		 
+		
 	});
 	
 </script>
@@ -100,6 +248,43 @@
 			<button type="submit" class="btn btn-default" id='reWrite'>답글</button>
 			</c:if>
 			<button type="button" class="btn btn-default" id='list'>닫기</button>
+		</div>
+		
+					<div id="reply">
+				<ol class="replyList" id='replyList'>
+				</ol>
+			<hr>
+		<section class="replyForm" id='replyMainForm'>
+		<form role="form" method="post" autocomplete="off" class="form-horizontal" id='commentForm'>
+		
+			<input type="hidden" id="bno" name="bno" value="${boardVO.bno}" readonly="readonly" />
+			<input type="hidden" id="page" name="page" value="${pvo.page}" readonly="readonly" />
+			<input type="hidden" id="perPageNum" name="perPageNum" value="${pvo.perPageNum}" readonly="readonly" />
+			<input type="hidden" id="searchType" name="searchType" value="${pvo.searchType}" readonly="readonly" />
+			<input type="hidden" id="keyword" name="keyword" value="${pvo.keyword}" readonly="readonly" />
+		
+			<div class="form-group">
+				<label for="writer" class="col-sm-2 control-label">작성자</label>
+				<div class="col-sm-10">
+					<input type="text" id="writer" name="writer" class="form-control" value='${loginVO.userName}' readonly/>
+				</div>
+			</div>			
+			
+			<div class="form-group">
+				<label for="content" class="col-sm-2 control-label">댓글 내용</label>
+				<div class="col-sm-10">
+					<textarea id="content" name="content" class="form-control" ></textarea>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				 <div class="col-sm-offset-2 col-sm-10"> 
+					<button type="button" class="repSubmit btn btn-success" onClick="fn_comment()">작성</button> 
+				</div>								
+			</div>
+		</form>		
+		</section>
+			
 		</div>
 		
 		</div>

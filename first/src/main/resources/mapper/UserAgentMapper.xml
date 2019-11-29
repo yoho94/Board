@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="first.test.mapper.UserAgentMapper">
+	<insert id="insert">
+		INSERT INTO `useragent`
+		(`ip`, `countryCode`,
+		`id`,
+		`osName`,
+		`osVersion`,
+		`browserName`,
+		`browserVersion`,
+		`deviceBrand`,
+		`deviceModel`,
+		`referer`,
+		`path`)
+		VALUES
+		(#{ip}, #{id}, #{countryCode},
+		#{osName}, #{osVersion}, #{browserName}, #{browserVersion},
+		#{deviceBrand}, #{deviceModel},
+		#{referer}, #{path});
+	</insert>
+
+	<select id="selectOsName" resultType="hashMap" parameterType="hashMap">
+		SELECT osName, count(osName) count from userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		GROUP BY osName
+		ORDER BY
+		count(osName) DESC
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectOsVersion" resultType="hashMap" parameterType="hashMap">
+		select osName, osVersion, count(osVersion) count from userAgent
+		where
+		date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		group by osVersion, osName
+		order by osName ,count(osVersion) DESC
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectBrowserName" resultType="hashMap"
+		parameterType="hashMap">
+		SELECT browserName, count(browserName) count from
+		userAgent
+		where date >
+		#{startDate} and #{endDate} > date <include refid="search"></include>
+		GROUP BY
+		browserName
+		ORDER BY
+		count(browserName) DESC
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectBrowserVersion" resultType="hashMap"
+		parameterType="hashMap">
+		select browserName, browserVersion,
+		count(browserVersion) count from userAgent
+		where date > #{startDate}
+		and #{endDate} > date <include refid="search"></include>
+		group by browserVersion, browserName;
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectDeviceBrand" resultType="hashMap"
+		parameterType="hashMap">
+		SELECT deviceBrand, count(deviceBrand) count from
+		userAgent
+		where date >
+		#{startDate} and #{endDate} > date <include refid="search"></include>
+		GROUP BY
+		deviceBrand
+		HAVING count(deviceBrand) > 0
+		ORDER BY
+		count(deviceBrand) DESC		
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectDeviceModel" resultType="hashMap"
+		parameterType="hashMap">
+		select deviceBrand, deviceModel,
+		count(deviceModel) count
+		from userAgent
+		where date > #{startDate}
+		and #{endDate} > date <include refid="search"></include>
+		group by
+		deviceModel, deviceBrand
+		HAVING count(deviceModel) > 0
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectId" resultType="hashMap" parameterType="hashMap">
+		select
+		count(IFNULL(id, 1)) count, id from userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		group by id order by
+		count(IFNULL(id, 1)) DESC
+		<include refid="setLimit"></include>
+	</select>
+	
+	<select id="selectIdNotNull" resultType="hashMap" parameterType="hashMap">
+		select
+		count(id) count, id from userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		group by id HAVING count > 0
+		order by count(id) DESC
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id='selectIp' resultType="hashMap" parameterType="hashMap">
+		select
+		count(ip) count, ip from userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		group by ip order by
+		count(ip) desc
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id="selectReferer" resultType="hashMap" parameterType="hashMap">
+		SELECT
+		COUNT(IFNULL(referer, 1)) count, referer
+		FROM
+		userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		GROUP BY referer
+		ORDER BY COUNT(IFNULL(referer, 1)) DESC
+		<include refid="setLimit"></include>
+	</select>
+	
+	<select id="selectRefererNotNull" resultType="hashMap" parameterType="hashMap">
+		SELECT
+		COUNT(referer) count, referer
+		FROM
+		userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		GROUP BY referer
+		HAVING count > 0
+		ORDER BY COUNT(referer) DESC
+		<include refid="setLimit"></include>
+	</select>
+	
+	<select id="selectPath" resultType="hashMap" parameterType="hashMap">
+		select
+		count(path) count, path from userAgent
+		where date > #{startDate} and #{endDate} > date <include refid="search"></include>
+		group by path order by 
+		count(path) desc
+		<include refid="setLimit"></include>
+	</select>
+
+	<select id='selectNewVisit' resultType="hashMap" parameterType="hashMap">
+	SELECT 
+	    COUNT(date) count, date
+	FROM
+	    (SELECT 
+	        ip, MIN(<include refid="dateType"></include>) date 
+	    FROM
+	        userAgent
+	    GROUP BY ip) a
+	GROUP BY date
+	HAVING date > #{startDate} AND #{endDate} > date <include refid="search"></include>
+	ORDER BY date ASC	
+	</select>
+
+	<select id="selectDate" resultType="hashMap" parameterType="hashMap">
+		SELECT
+		<include refid="dateType"></include>
+		date, count(
+		<include refid="dateType"></include>
+		) count
+		FROM userAgent
+		WHERE
+		<include refid="dateType"></include>
+		> #{startDate} AND #{endDate} >
+		<include refid="dateType"></include> <include refid="search"></include>
+		GROUP BY
+		<include refid="dateType"></include>
+		ORDER BY
+		<include refid="dateType"></include>
+		ASC
+	</select>
+
+	<sql id="dateType">
+		<if test="type == 'y'">
+			DATE_FORMAT(date, '%Y')
+		</if>
+		<if test="type == 'm'">
+			DATE_FORMAT(date, '%Y-%m')
+		</if>
+		<if test="type == 'd'">
+			DATE_FORMAT(date, '%Y-%m-%d')
+		</if>
+	</sql>
+	
+	<sql id='setLimit'>
+		<if test="limit != null">
+			<if test="limit > 0">
+				limit #{limit}
+			</if>
+		</if>
+	</sql>
+
+	<select id="selectAll" resultType="first.test.vo.UserAgentVO">
+		SELECT * FROM useragent order
+		by date asc
+	</select>
+	
+	<select id="listSearch" resultType="first.test.vo.UserAgentVO">
+		SELECT * FROM useragent where date > #{startDate} and #{endDate} > date 
+		<include refid="search"></include>
+		order by date asc		 
+		LIMIT #{pageStart}, #{perPageNum} 
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+		SELECT count(seq) FROM useragent where date > #{startDate} and #{endDate} > date
+		<include refid="search"></include>
+	</select>
+	
+	<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 'ip'.toString()">
+				AND ip like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'date'.toString()">
+				AND date like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'id'.toString()">
+				AND id like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'os'.toString()">
+				AND (osName like concat('%', #{keyword}, '%') OR osVersion like
+				concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'browser'.toString()">
+				AND (browserName like concat('%', #{keyword}, '%') OR browserVersion like
+				concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'device'.toString()">
+				AND (deviceBrand like concat('%', #{keyword}, '%')
+				OR deviceModel like concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'referer'.toString()">
+				AND referer like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'path'.toString()">
+				AND path like concat('%', #{keyword}, '%')
+			</if>
+		</if>
+	</sql>
+
+</mapper>

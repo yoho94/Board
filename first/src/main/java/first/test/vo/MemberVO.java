@@ -6,6 +6,14 @@ public class MemberVO {
 	private String userPass;
 	private String userName;
 	private int isAdmin;
+	private char isUsing;
+	
+	public char getIsUsing() {
+		return isUsing;
+	}
+	public void setIsUsing(char isUsing) {
+		this.isUsing = isUsing;
+	}
 	public String getUserId() {
 		return userId;
 	}

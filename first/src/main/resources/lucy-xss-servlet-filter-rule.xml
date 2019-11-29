@@ -40,6 +40,12 @@
         <params>
             <param name="globalParameter" useDefender="false" />
             <param name="globalPrefixParameter" usePrefix="true" useDefender="false" />
+            <param name="subjective_answer">
+				<defender>xssPreventerDefender</defender>
+           	</param>
+      		<param name="url2Parameter2">
+         		<defender>xssPreventerDefender</defender>
+           	</param>
         </params>
     </global>
 

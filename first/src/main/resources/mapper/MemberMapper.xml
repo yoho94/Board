@@ -18,4 +18,24 @@
 	<select id='nameCheck' resultType="int">
 		SELECT count(*) FROM member WHERE userName=#{userName}
 	</select>
+	
+	<!-- 회원 관리 목록 가져오기 -->
+	<select id="selectMemberList" resultType="first.test.vo.MemberVO">
+		SELECT userId, userName, isAdmin, isUsing FROM member;
+	</select>
+	
+	<!-- 회원 사용 하기 -->
+	<update id="updateUsing">
+		UPDATE member SET isUsing = 'Y' WHERE userId = #{userId}
+	</update>
+	
+	<!-- 회원 미사용 하기 -->
+	<update id="updateUnUsing">
+		UPDATE member SET isUsing = 'N' WHERE userId = #{userId}
+	</update>
+	
+	<!-- 회원 권한 변경 -->
+	<update id="updateAdmin">
+		UPDATE member SET isAdmin = #{isAdmin} WHERE userId = #{userId}
+	</update>
 </mapper>

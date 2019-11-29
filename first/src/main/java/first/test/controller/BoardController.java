@@ -1,26 +1,29 @@
 package first.test.controller;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.nhncorp.lucy.security.xss.XssPreventer;
@@ -28,10 +31,12 @@ import com.oreilly.servlet.MultipartRequest;
 import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
 import first.test.service.BoardService;
-import first.test.service.MemberService;
+import first.test.service.PopupService;
+import first.test.service.ReplyService;
 import first.test.vo.BoardVO;
 import first.test.vo.MemberVO;
 import first.test.vo.PageMaker;
+import first.test.vo.ReplyVO;
 import first.test.vo.SearchCriteria;
 
 
@@ -47,7 +52,9 @@ public class BoardController {
 	@Inject
 	private BoardService service;
 	@Inject
-	private MemberService memberService;
+	private ReplyService repService;
+	@Inject
+	private PopupService popupService;
 
 	@RequestMapping("/")
 	public String home1() {
@@ -56,104 +63,26 @@ public class BoardController {
 	
 	@RequestMapping("/home")
 	public void home2() {
-	}
-	
-	@RequestMapping("login")
-	public String login(MemberVO loginVO, HttpServletRequest request, Model model) throws Exception {
-
-		MemberVO resultVO = new MemberVO();
-
-		resultVO = memberService.login(loginVO);
-
-		if (resultVO != null && !resultVO.getUserId().equals("") && !resultVO.getUserPass().equals("")) {
-
-			request.getSession().setAttribute("loginVO", resultVO);
-
-			return "redirect:/list";
-
-		} else {
-
-			model.addAttribute("msg", "사용자의 ID 혹은 패스워드가 일치하지 않습니다.");
-
-			return "/home";
-
-		}
-	}
-	
-	@RequestMapping("logout")
-	public String logout(MemberVO loginVO, HttpServletRequest request, Model model) {
-		request.getSession().removeAttribute("loginVO");
-		
-		return "redirect:/";
-	}
-	
-	@RequestMapping(value = "MemberJoin", method = RequestMethod.GET)
-	public void join() {
-		
-	}
-	
-	@RequestMapping(value = "MemberJoin", method = RequestMethod.POST)
-	public String joinAction(MemberVO vo, @RequestParam("pass2") String pass2, Model model){
-		
-		if(vo.getUserPass().equals(pass2)) {	
-			try {
-				vo.setUserId(vo.getUserId().trim());
-				vo.setUserName(vo.getUserId().trim());
-				memberService.register(vo);
-				model.addAttribute("msg", "회원가입 성공 !");
-			} catch (Exception e) {
-				model.addAttribute("msg", "회원가입 실패. 다시 시도해주세요.");
-			}
-			
-		}
-		else {
-			model.addAttribute("msg", "회원가입 실패. 패스워드가 일치하지 않습니다.");
-		}
-		
-		
-		return "/home";
-	}
-	
-	@RequestMapping(value = "/idCheck", method = RequestMethod.POST)
-	public @ResponseBody String idCheck(String userId) {
-		int tmp;
-		try {
-			tmp = memberService.idCheck(userId.trim());
-		} catch(Exception e) {
-			System.out.println(e.toString());
-			tmp = 1;
-		}
-		return tmp+"";
-	}
-	
-	@RequestMapping(value = "/nameCheck", method = RequestMethod.POST)
-	public @ResponseBody String nameCheck(String userName) {
-		int tmp;
-		try {
-			tmp = memberService.nameCheck(userName.trim());
-		} catch(Exception e) {
-			System.out.println(e.toString());
-			tmp = 1;
-		}
-		return tmp+"";
-	}
+	}	
 
 	@RequestMapping(value = "/list")
 	public void listPage(@ModelAttribute("pvo") SearchCriteria pvo, Model model) throws Exception {
-		System.out.println("list pvo: " + pvo);
+//		System.out.println("list pvo: " + pvo);
 		model.addAttribute("list", service.listSearch(pvo));
 
 		PageMaker pageMaker = new PageMaker();
 		pageMaker.setPvo(pvo);
 
 		pageMaker.setTotalCount(service.listSearchCount(pvo));
-		System.out.println("ctrl" + service.listSearch(pvo));
+//		System.out.println("ctrl" + service.listSearch(pvo));
 		model.addAttribute("pageMaker", pageMaker);
 		
 		if(pvo.getPage() == 1) {
 			BoardVO notice = service.readNotice();
 			model.addAttribute("noticeVO", notice);
-		}
+			// 팝업 띄우기
+			model.addAttribute("popupList", popupService.mainPopupList());
+		}		
 	}
 	
 	@RequestMapping(value = "/readPage" , method = RequestMethod.POST)
@@ -277,7 +206,7 @@ public class BoardController {
 		String path = "/resources/upload"; // 개발자 지정 폴더
 //		String real_save_path = "D:/upload";
 		String real_save_path = request.getSession().getServletContext().getRealPath(path);	
-		
+//		System.out.println(real_save_path);
 		File Folder = new File(real_save_path);
 		System.out.println(real_save_path);
 
@@ -285,58 +214,43 @@ public class BoardController {
 		if (!Folder.exists()) {
 			try {
 				Folder.mkdir(); // 폴더 생성합니다.
-				System.out.println("폴더가 생성되었습니다.");
+//				System.out.println("폴더가 생성되었습니다.");
 			} catch (Exception e) {
 				e.getStackTrace();
 			}
 		} else {
-			System.out.println("이미 폴더가 생성되어 있습니다.");
+//			System.out.println("이미 폴더가 생성되어 있습니다.");
 		}
 		
 		MultipartRequest multi = new MultipartRequest(request, real_save_path, maxRequestSize, "UTF-8", new DefaultFileRenamePolicy());
-		String fileName = multi.getOriginalFileName("upload"); // ckeditor5 static const
-		JSONObject outData = new JSONObject();
-		outData.put("uploaded", true);
-		outData.put("url", request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/" + fileName);
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-		response.getWriter().print(outData.toString());
+	
+//		Enumeration it = multi.getFileNames();
+//		String getFileName;
+//		while(it.hasMoreElements()){
+//			getFileName = (String) it.nextElement();
+//			System.out.println(getFileName);
+//			System.out.println(multi.getOriginalFileName(getFileName));
+//		}		
+		
+		String fileName_CK = multi.getOriginalFileName("upload"); // ckeditor5 static const
+		String fileName_popup = multi.getOriginalFileName("image"); // ckeditor5 static const
+		if(fileName_CK != null) {
+			JSONObject outData = new JSONObject();
+			outData.put("uploaded", true);
+			outData.put("url", request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/" + fileName_CK);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			response.getWriter().print(outData.toString());
+		} else {
+			JSONObject outData = new JSONObject();
+			outData.put("uploaded", true);
+			outData.put("url", request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/" + fileName_popup);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			response.getWriter().print(outData.toString());
+		}
 
 	}
-	
-	
-	@RequestMapping(value="/common/error{error_code}.do")
-    public ModelAndView error(HttpServletRequest request, @PathVariable String error_code) {
-        ModelAndView mv = new ModelAndView("/error");
-        String msg = (String) request.getAttribute("javax.servlet.error.message"); 
-         
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("STATUS_CODE", request.getAttribute("javax.servlet.error.status_code"));
-        map.put("REQUEST_URI", request.getAttribute("javax.servlet.error.request_uri"));
-        map.put("EXCEPTION_TYPE", request.getAttribute("javax.servlet.error.exception_type"));
-        map.put("EXCEPTION", request.getAttribute("javax.servlet.error.exception"));
-        map.put("SERVLET_NAME", request.getAttribute("javax.servlet.error.servlet_name"));
-         
-        try {
-            int status_code = Integer.parseInt(error_code);
-            switch (status_code) {
-            case 400: msg = "잘못된 요청입니다."; break;
-            case 403: msg = "접근이 금지되었습니다."; break;
-            case 404: msg = "페이지를 찾을 수 없습니다."; break;
-            case 405: msg = "요청된 메소드가 허용되지 않습니다."; break;
-            case 500: msg = "서버에 오류가 발생하였습니다."; break;
-            case 503: msg = "서비스를 사용할 수 없습니다."; break;
-            default: msg = "알 수 없는 오류가 발생하였습니다."; break;
-            }
-        } catch(Exception e) {
-            msg = "기타 오류가 발생하였습니다.";
-        } finally {
-            map.put("MESSAGE", msg);
-        }         
-
-        mv.addObject("error", map);
-        return mv;
-    }
 	
 	@RequestMapping(value ="/adminPage")
 	public String adminPage(HttpServletRequest request, Model model, @ModelAttribute("pvo") SearchCriteria pvo) throws Exception {
@@ -361,5 +275,65 @@ public class BoardController {
         
         return "/adminPage";
 	}
+	
+    /**
+     * 댓글 등록(Ajax)
+     * @param boardVO
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value="/board/addComment.do")
+    @ResponseBody
+    public String ajax_addComment(ReplyVO vo) throws Exception{        
+    	repService.writeReply(vo);
+    	
+        return "success";
+    }
+    
+    @RequestMapping(value="/board/addReComment.do")
+    @ResponseBody
+    public String ajax_addReComment(ReplyVO vo, @RequestParam("orno") int orno) throws Exception{        
+    	repService.writeReReply(vo, orno);
+    	
+        return "success";
+    }
+	
+	/**
+     * 게시물 댓글 불러오기(Ajax)
+     * @param boardVO
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value="/board/commentList.do", produces="application/json; charset=utf8")
+    @ResponseBody
+    public ResponseEntity ajax_commentList(@ModelAttribute("boardVO") BoardVO boardVO, HttpServletRequest request) throws Exception{
+        
+        HttpHeaders responseHeaders = new HttpHeaders();
+        ArrayList<HashMap> hmlist = new ArrayList<HashMap>();
+        
+        // 해당 게시물 댓글
+        List<ReplyVO> commentVO = repService.readReply(boardVO.getBno());
+        
+        if(commentVO.size() > 0){
+            for(int i=0; i<commentVO.size(); i++){
+                HashMap hm = new HashMap();
+                hm.put("bno", commentVO.get(i).getBno());
+                hm.put("content", commentVO.get(i).getContent());
+                hm.put("writer", commentVO.get(i).getWriter());
+                hm.put("regDate", commentVO.get(i).getRegStr());
+                hm.put("rno", commentVO.get(i).getRno());
+                hm.put("re_depth", commentVO.get(i).getRe_depth());
+                
+                hmlist.add(hm);
+            }
+            
+        }
+        
+        JSONArray json = new JSONArray(hmlist);        
+        return new ResponseEntity(json.toString(), responseHeaders, HttpStatus.CREATED);
+        
+    }
 
 }

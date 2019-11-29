@@ -23,20 +23,53 @@
 	
 	<context:component-scan base-package="first.test.controller" />
 	<context:component-scan base-package="first.test.dao" />
-	<context:component-scan base-package="first.test.service" />
+	<context:component-scan base-package="first.test.service" />	
+
 	
 	<!-- 로그인을 위한 인터셉터 -->
 	<beans:bean id="LoginInterceptor" class="first.test.interceptor.LoginInterceptor"></beans:bean>
 	
 	<interceptors>
         <interceptor>
-            <mapping path="/*"/>
-            <exclude-mapping path="/"/>
+            <mapping path="/**"/>
+            <exclude-mapping path="/"/>            
+            <exclude-mapping path="/list"/>
+            <exclude-mapping path="/modal"/>
             <exclude-mapping path="/login"/>
             <exclude-mapping path="/MemberJoin"/>
             <exclude-mapping path="/idCheck"/>
-            <exclude-mapping path="/nameCheck"/>            
+            <exclude-mapping path="/nameCheck"/>
+<!--             <exclude-mapping path="/survey/info"/> -->
+<!--             <exclude-mapping path="/survey/list"/> -->
+            <exclude-mapping path="/admin/showPopup"/>
+            <exclude-mapping path="/resources/**"/>        
             <beans:ref bean="LoginInterceptor"/>
+        </interceptor>
+    </interceptors>
+    
+    <!-- 로그를 위한 인터셉터 -->
+	<beans:bean id="LogInterceptor" class="first.test.interceptor.LogInterceptor"></beans:bean>
+	
+	<interceptors>
+        <interceptor>
+            <mapping path="/**"/>
+            <exclude-mapping path="**.ajax"/>
+            <exclude-mapping path="**.action"/>
+            <exclude-mapping path="/resources/**"/>
+            <beans:ref bean="LogInterceptor"/>
+        </interceptor>
+    </interceptors>
+    
+    <!-- 관리자를 위한 인터셉터 -->
+	<beans:bean id="AdminInterceptor" class="first.test.interceptor.AdminInterceptor"></beans:bean>
+	
+	<interceptors>
+        <interceptor>
+            <mapping path="/admin/**"/>
+            <exclude-mapping path="/admin/login"/>
+            <exclude-mapping path="/admin/login.action"/>
+            <exclude-mapping path="/admin/showPopup"/>
+            <beans:ref bean="AdminInterceptor"/>
         </interceptor>
     </interceptors>
 	

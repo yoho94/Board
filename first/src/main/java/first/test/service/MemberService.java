@@ -1,5 +1,7 @@
 package first.test.service;
 
+import java.util.List;
+
 import first.test.vo.MemberVO;
 
 public interface MemberService {
@@ -20,4 +22,11 @@ public interface MemberService {
 	
 	// 닉네임 검사
 	public int nameCheck(String userName) throws Exception;
+	
+	// 관리 목록 가져오기
+	public List<MemberVO> selectMemberList() throws Exception;
+	
+	public void updateUsing(String userId) throws Exception;
+	public void updateUnUsing(String userId) throws Exception;
+	public void updateAdmin(MemberVO vo) throws Exception;
 }

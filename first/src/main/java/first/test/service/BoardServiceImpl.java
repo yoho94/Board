@@ -69,5 +69,9 @@ public class BoardServiceImpl implements BoardService {
 	public int restore(int bno) throws Exception {
 		return dao.restore(bno);
 	}
+	@Override
+	public List<BoardVO> selectDate() throws Exception {
+		return dao.selectDate();
+	}
 
 }

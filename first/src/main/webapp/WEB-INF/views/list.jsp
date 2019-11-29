@@ -65,14 +65,24 @@ $(document).ready(function(){
 // 		formObj.submit();
 	});
 	
+	// 기존의 모달 팝업
 	if('${noticeVO}' && getCookie("noticeBno${noticeVO.bno },id${loginVO.userId}") != "done")
 		$('div.modal').modal({remote : '/modal'});
 	
-	
 });
-
-
 </script>
+
+<!-- 새창 팝업 -->
+<c:forEach items="${popupList}" var="vo" varStatus="status">
+<script>
+	var url = "/admin/showPopup?seq=${vo.seq}";
+	var option = "width=${vo.width}, height=${vo.height + 50}, menubar=no, status=no, toolbar=no";
+	
+	if(getCookie("popupSeq${vo.seq },id${loginVO.userId}") != "done")
+		window.open(url, "${vo.seq}", option);
+</script>
+</c:forEach>
+
 <body>
 	<div class='container'>
 	
