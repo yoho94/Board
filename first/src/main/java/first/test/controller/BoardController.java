@@ -1,6 +1,7 @@
 package first.test.controller;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,9 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,10 +34,12 @@ import com.nhncorp.lucy.security.xss.XssPreventer;
 import com.oreilly.servlet.MultipartRequest;
 import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
-import first.test.service.BoardService;
+import first.test.service.BoardArticleService;
+import first.test.service.BoardBoardService;
 import first.test.service.PopupService;
 import first.test.service.ReplyService;
-import first.test.vo.BoardVO;
+import first.test.vo.BoardArticleVO;
+import first.test.vo.BoardBoardVO;
 import first.test.vo.MemberVO;
 import first.test.vo.PageMaker;
 import first.test.vo.ReplyVO;
@@ -44,296 +50,417 @@ import first.test.vo.SearchCriteria;
  * Handles requests for the application home page.
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping("/board")
 public class BoardController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BoardController.class);
 
 	@Inject
-	private BoardService service;
+	private BoardBoardService boardService;
+	@Inject
+	private BoardArticleService service;
 	@Inject
 	private ReplyService repService;
 	@Inject
 	private PopupService popupService;
 
-	@RequestMapping("/")
-	public String home1() {
-		return "home";
+	@RequestMapping("/sidenav")
+	public String getSidenav() throws Exception {
+		return "/board/sidenav";
 	}
 	
-	@RequestMapping("/home")
-	public void home2() {
-	}	
-
+	@RequestMapping("/sidenavList")
+	public String getSidenavList(Model model, Integer page, Integer perPageNum, String searchType, String keyword) throws Exception {
+		SearchCriteria pvo = new SearchCriteria(searchType, keyword);
+		pvo.setPage(page);
+		pvo.setPerPageNum(perPageNum);
+		
+		model.addAttribute("list", boardService.selectUserBoardList(pvo));
+		
+		PageMaker pageMaker = new PageMaker();
+		pageMaker.setPvo(pvo);
+		pageMaker.setTotalCount(boardService.selectUserBoardListTotCnt());		
+		model.addAttribute("pageMaker", pageMaker);
+		model.addAttribute("pvo", pvo);
+		
+		return "/board/sidenavList";
+	}
+	
 	@RequestMapping(value = "/list")
-	public void listPage(@ModelAttribute("pvo") SearchCriteria pvo, Model model) throws Exception {
-//		System.out.println("list pvo: " + pvo);
-		model.addAttribute("list", service.listSearch(pvo));
-
+	public String getBoardMainList(Model model, @ModelAttribute("pvo") SearchCriteria pvo,
+			HttpServletResponse response, HttpServletRequest request) throws Exception {
+		HttpSession session = request.getSession();
+		MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
+		
+		model.addAttribute("list", service.selectMainReadList(loginVO, pvo));
+		
 		PageMaker pageMaker = new PageMaker();
 		pageMaker.setPvo(pvo);
 
-		pageMaker.setTotalCount(service.listSearchCount(pvo));
-//		System.out.println("ctrl" + service.listSearch(pvo));
+		pageMaker.setTotalCount(service.selectMainReadListTotCnt(loginVO, pvo));
 		model.addAttribute("pageMaker", pageMaker);
-		
-		if(pvo.getPage() == 1) {
-			BoardVO notice = service.readNotice();
-			model.addAttribute("noticeVO", notice);
+
+		if (pvo.getPage() == 1) {
+			List<BoardArticleVO> baList = service.selectMainNoticeList(loginVO);
+			if(baList != null && baList.size() > 0) {
+				model.addAttribute("noticeVO", baList.get(0));
+				model.addAttribute("noticeVOList", baList);
+			}
+			
 			// 팝업 띄우기
 			model.addAttribute("popupList", popupService.mainPopupList());
+		}
+		
+		return "/board/list";
+	}
+	
+	@RequestMapping(value = "/readPage", method = RequestMethod.POST)
+	public String articleMainReadPage(Model model, BoardArticleVO vo, String pw,
+			@ModelAttribute("pvo") SearchCriteria pvo,
+			@ModelAttribute("showType") String showType,
+			HttpServletResponse response, HttpServletRequest request) throws Exception {
+		BoardArticleVO articleVO = service.selectArticle(vo);
+		Character isSecret = articleVO.getIsSecret();		
+		
+		if(isSecret != null && isSecret == 'Y') {
+			boolean pwMatches = false;
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			pwMatches = pwEncoder.matches(pw, articleVO.getPassword());
+			
+			if(!pwMatches) {
+				response.setContentType("text/html; charset=UTF-8");			 
+				PrintWriter out = response.getWriter();			 
+				out.println("<script>alert('비밀번호 불일치.'); self.opener = self; window.close();</script>");			 
+				out.flush();
+				
+				return "redirect:/board/list";
+			}
+		}
+		
+		BoardBoardVO boardVO = new BoardBoardVO();
+		boardVO.setBoardId(articleVO.getBoardId());
+		boardVO = boardService.selectBoard(boardVO);
+		String boardType = boardVO.getBoardType();
+		model.addAttribute("boardVO", boardVO);
+		
+		service.updateViewcnt(articleVO.getBno());
+		if(boardType.equals("notice")) {
+			HttpSession session = request.getSession();
+			MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
+			service.insertReadTbl(loginVO, articleVO);		
+			
+			PageMaker pageMaker = new PageMaker();
+			pageMaker.setPvo(pvo);
+
+			pageMaker.setTotalCount(service.selectMainReadListTotCnt(loginVO, pvo));
+			model.addAttribute("pageMaker", pageMaker);
 		}		
-	}
-	
-	@RequestMapping(value = "/readPage" , method = RequestMethod.POST)
-	public void readPage(@ModelAttribute("pvo") SearchCriteria pvo, @RequestParam("bno") int bno, Model model) throws Exception{
-		BoardVO vo = service.read(bno);
-		service.updateViewcnt(bno);
 		
 		String clean = XssPreventer.escape(vo.getTitle());
 		vo.setTitle(clean);
-//		System.out.println(clean);
-		model.addAttribute("boardVO", vo);
+		model.addAttribute("articleVO", articleVO);
+		
+		return "/board/" + boardType + "/readPage";
 	}
 	
-	@RequestMapping(value = "/writePage", method = RequestMethod.POST)
-	public void writePage(@ModelAttribute("pvo") SearchCriteria pvo, Model model) {
+	@RequestMapping(value = "/{boardType}/{url}/list")
+	public String getBoardList(Model model, @ModelAttribute("pvo") SearchCriteria pvo,
+			HttpServletResponse response, HttpServletRequest request, 
+			@RequestParam(value = "showType", defaultValue = "default") String showType,
+			@PathVariable String boardType,	@PathVariable String url) throws Exception {
 		
+		BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		model.addAttribute("boardVO", boardVO);
+		
+		if(boardVO.getIsUse() != 'Y') {
+			response.setContentType("text/html; charset=UTF-8");			 
+			PrintWriter out = response.getWriter();			 
+			out.println("<script>alert('사용 불가 게시판입니다.'); location.href='/board/list';</script>");			 
+			out.flush();
+		}
+		
+		if (boardType.equals("notice")) {
+			HttpSession session = request.getSession();
+			MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
+			Integer readListTotCnt = service.selectReadListTotCnt(loginVO, boardVO ,pvo);
+			
+			model.addAttribute("readListTotCnt", readListTotCnt);
+			model.addAttribute("showType", showType);
+			if(showType.equals("default")) {				
+				model.addAttribute("list", service.selectReadList(loginVO, boardVO, pvo));
+				
+				PageMaker pageMaker = new PageMaker();
+				pageMaker.setPvo(pvo);
+		
+				pageMaker.setTotalCount(readListTotCnt);
+				model.addAttribute("pageMaker", pageMaker);	
+			} else {
+				model.addAttribute("list", service.selectArticleList(boardVO, pvo));
+				
+				PageMaker pageMaker = new PageMaker();
+				pageMaker.setPvo(pvo);
+		
+				pageMaker.setTotalCount(service.selectArticleListTotCnt(boardVO ,pvo));
+				model.addAttribute("pageMaker", pageMaker);	
+			}
+		} else { // 기본 게시판, 알림 게시판 전체보기
+			model.addAttribute("list", service.selectArticleList(boardVO, pvo));
+			
+			PageMaker pageMaker = new PageMaker();
+			pageMaker.setPvo(pvo);
+	
+			pageMaker.setTotalCount(service.selectArticleListTotCnt(boardVO ,pvo));
+			model.addAttribute("pageMaker", pageMaker);	
+		}
+		
+		/*if(boardType.equals("basic")) {			
+			model.addAttribute("list", service.selectArticleList(boardVO, pvo));
+	
+			PageMaker pageMaker = new PageMaker();
+			pageMaker.setPvo(pvo);
+	
+			pageMaker.setTotalCount(service.selectArticleListTotCnt(boardVO ,pvo));
+			model.addAttribute("pageMaker", pageMaker);	
+
+		} else if (boardType.equals("notice")) {
+			HttpSession session = request.getSession();
+			MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
+			
+			model.addAttribute("list", service.selectReadList(loginVO, boardVO, pvo));
+			
+			PageMaker pageMaker = new PageMaker();
+			pageMaker.setPvo(pvo);
+	
+			pageMaker.setTotalCount(service.selectReadListTotCnt(loginVO, boardVO ,pvo));
+			model.addAttribute("pageMaker", pageMaker);	
+		}*/
+		
+		
+		if (pvo.getPage() == 1) {
+			List<BoardArticleVO> baList = service.selectNoticeList(boardVO);
+			if(baList != null && baList.size() > 0) {
+				model.addAttribute("noticeVO", baList.get(0));
+				model.addAttribute("noticeVOList", baList);
+			}
+			
+			// 팝업 띄우기
+			model.addAttribute("popupList", popupService.mainPopupList());
+		}
+		
+		return "/board/" + boardType + "/list";
 	}
 	
-	@RequestMapping(value = "/writePageAction", method = RequestMethod.POST)
-	public String writePageAction(BoardVO vo) throws Exception {
-		service.regist(vo);
+	@RequestMapping(value = "/{boardType}/{url}/writePage", method = RequestMethod.POST)
+	public String articleWritePage(Model model, @ModelAttribute("pvo") SearchCriteria pvo,
+			HttpServletResponse response, HttpServletRequest request,
+			@PathVariable String boardType,	@PathVariable String url) throws Exception {
 		
-		return "redirect:/list";
+		BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		model.addAttribute("boardVO", boardVO);
+		
+		return "/board/" + boardType + "/writePage";
 	}
 	
-	@RequestMapping(value = "/removeAction", method = RequestMethod.POST)
-	public String removeAction(@RequestParam("bno") int bno, SearchCriteria pvo, RedirectAttributes rttr) throws Exception{
-		service.remove(bno);
-		
-		rttr.addAttribute("page", pvo.getPage());
-		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
-		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
-		
-		return "redirect:/list";
+	@RequestMapping(value = "/{boardType}/{url}/writePageAction", method = RequestMethod.POST)
+	public String articleWritePageAction(Model model, BoardArticleVO vo,
+			@PathVariable String boardType,	@PathVariable String url) throws Exception {
+		String userPW = vo.getPassword();
+		if(userPW != null && !userPW.isEmpty()) {
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			String encodePW = pwEncoder.encode(userPW);
+			vo.setPassword(encodePW);
+		}
+		service.insertArticle(vo);
+		return "redirect:/board/" + boardType + "/" + url + "/list";
 	}
 	
-	@RequestMapping(value = "/adminRemoveAction", method = RequestMethod.POST)
-	public String adminRemoveAction(@RequestParam("bno") int bno, SearchCriteria pvo, RedirectAttributes rttr) throws Exception{
-		service.remove(bno);
+	@RequestMapping(value = "/{boardType}/{url}/readPage", method = RequestMethod.POST)
+	public String articleReadPage(Model model, BoardArticleVO vo, String pw,
+			HttpServletResponse response, HttpServletRequest request, @ModelAttribute("pvo") SearchCriteria pvo,
+			@ModelAttribute("showType") String showType,
+			@PathVariable String boardType,	@PathVariable String url) throws Exception {
+		BoardArticleVO articleVO = service.selectArticle(vo);
+		Character isSecret = articleVO.getIsSecret();		
 		
-		rttr.addAttribute("page", pvo.getPage());
-		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
-		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
+		if(isSecret != null && isSecret == 'Y') {
+			boolean pwMatches = false;
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			pwMatches = pwEncoder.matches(pw, articleVO.getPassword());
+			
+			if(!pwMatches) {
+				response.setContentType("text/html; charset=UTF-8");			 
+				PrintWriter out = response.getWriter();			 
+				out.println("<script>alert('비밀번호 불일치.'); self.opener = self; window.close();</script>");			 
+				out.flush();
+				return "redirect:/board/" + boardType + "/" + url + "/list";
+			}
+		}
 		
-		return "redirect:/adminPage";
-	}
-	
-	@RequestMapping(value = "/realRemoveAction", method = RequestMethod.POST)
-	public String realRemoveAction(BoardVO vo, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
-		service.realDelete(vo);
+		service.updateViewcnt(articleVO.getBno());
+		if(boardType.equals("notice")) {
+			HttpSession session = request.getSession();
+			MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");
+			service.insertReadTbl(loginVO, articleVO);	
+			
+			PageMaker pageMaker = new PageMaker();
+			pageMaker.setPvo(pvo);
+
+			pageMaker.setTotalCount(service.selectMainReadListTotCnt(loginVO, pvo));
+			model.addAttribute("pageMaker", pageMaker);
+		}
 		
-		rttr.addAttribute("page", pvo.getPage());
-		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
-		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
+		BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		model.addAttribute("boardVO", boardVO);
 		
-		return "redirect:/adminPage";
-	}
-	
-	@RequestMapping(value = "/restore", method = RequestMethod.POST)
-	public String restore(BoardVO vo, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
-		service.restore(vo.getBno());
-		
-		rttr.addAttribute("page", pvo.getPage());
-		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
-		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
-		
-		return "redirect:/adminPage";
-	}
-	
-	@RequestMapping(value = "/modifyPage", method = RequestMethod.POST)
-	public void modifyPage(@ModelAttribute("boardVO") BoardVO vo, @ModelAttribute("pvo") SearchCriteria pvo) {
 		String clean = XssPreventer.escape(vo.getTitle());
 		vo.setTitle(clean);
+		model.addAttribute("articleVO", articleVO);
+		
+		return "/board/" + boardType + "/readPage";
 	}
 	
-	@RequestMapping(value = "/modifyPageAction", method = RequestMethod.POST)
-	public String modifyPageAction(BoardVO board, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
-		service.modify(board);
+	@RequestMapping(value = "/{boardType}/{url}/modifyPage", method = RequestMethod.POST)
+	public String articleModifyPage(Model model, BoardArticleVO vo,
+			@ModelAttribute("pvo") SearchCriteria pvo, String pw,
+			HttpServletResponse response, HttpServletRequest request,
+			@PathVariable String boardType,	@PathVariable String url) throws Exception {
+		BoardArticleVO articleVO = service.selectArticle(vo);
+		
+		Character isSecret = articleVO.getIsSecret();		
+		
+		if(isSecret != null && isSecret == 'Y') {
+			boolean pwMatches = false;
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			pwMatches = pwEncoder.matches(pw, articleVO.getPassword());
+			
+			if(!pwMatches) {
+				response.setContentType("text/html; charset=UTF-8");			 
+				PrintWriter out = response.getWriter();			 
+				out.println("<script>alert('비밀번호 불일치.'); self.opener = self; window.close();</script>");			 
+				out.flush();
+				return "redirect:/board/" + boardType + "/" + url + "/list";
+			}
+		}
+		
+		BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		model.addAttribute("boardVO", boardVO);
+		
+		String clean = XssPreventer.escape(vo.getTitle());
+		vo.setTitle(clean);
+		model.addAttribute("articleVO", articleVO);
+		
+		return "/board/" + boardType + "/modifyPage";
+	}
+	
+	@RequestMapping(value = "/{boardType}/{url}/modifyPageAction", method = RequestMethod.POST)
+	public String articleModifyPageAction(BoardArticleVO board,
+			@PathVariable String boardType,	@PathVariable String url,
+			SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
+		String userPW = board.getPassword();
+		if(userPW != null && !userPW.isEmpty()) {
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			String encodePW = pwEncoder.encode(userPW);
+			board.setPassword(encodePW);
+		}
+		service.updateArticle(board);
+		
+		/*BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		rttr.addAttribute("boardVO", boardVO);
 		
 		rttr.addAttribute("page", pvo.getPage());
 		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
 		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
+		rttr.addAttribute("keyword", pvo.getKeyword());*/
 		
-		return "redirect:/list";
+		return "redirect:/board/" + boardType + "/" + url + "/list";
 	}
 	
-	@RequestMapping(value = "/reRegister", method = RequestMethod.POST)
-	public void reRegister(@ModelAttribute("oBoardVO")BoardVO vo, @ModelAttribute("pvo") SearchCriteria pvo) {
+	@RequestMapping(value = "/{boardType}/{url}/removeAction", method = RequestMethod.POST)
+	public String removeAction(BoardArticleVO vo, SearchCriteria pvo, String pw,
+			HttpServletResponse response, HttpServletRequest request,
+			@PathVariable String boardType,	@PathVariable String url,
+			RedirectAttributes rttr) throws Exception{
+		
+		BoardArticleVO articleVO = service.selectArticle(vo);
+		
+		Character isSecret = articleVO.getIsSecret();		
+		
+		if(isSecret != null && isSecret == 'Y') {
+			boolean pwMatches = false;
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			pwMatches = pwEncoder.matches(pw, articleVO.getPassword());
+			
+			if(!pwMatches) {
+				response.setContentType("text/html; charset=UTF-8");			 
+				PrintWriter out = response.getWriter();			 
+				out.println("<script>alert('비밀번호 불일치.'); self.opener = self; window.close();</script>");			 
+				out.flush();
+				return "redirect:/board/" + boardType + "/" + url + "/list";
+			}
+		}
+		
+		service.remove(articleVO.getBno());
+		
+		/*BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		rttr.addAttribute("boardVO", boardVO);
+		
+		rttr.addAttribute("page", pvo.getPage());
+		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
+		rttr.addAttribute("searchType", pvo.getSearchType());
+		rttr.addAttribute("keyword", pvo.getKeyword());*/
+		
+		return "redirect:/board/" + boardType + "/" + url + "/list";
+	}
+	
+	@RequestMapping(value = "/{boardType}/{url}/reRegister", method = RequestMethod.POST)
+	public String articleReRegister(@ModelAttribute("oBoardVO")BoardArticleVO vo, 
+			@PathVariable String boardType,	@PathVariable String url, Model model,
+			@ModelAttribute("pvo") SearchCriteria pvo) throws Exception {
+		BoardBoardVO urlBoardVO = new BoardBoardVO();
+		urlBoardVO.setUrl(url);
+		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+		model.addAttribute("boardVO", boardVO);
+		
 		String clean = XssPreventer.escape(vo.getTitle());
 		vo.setTitle(clean);
+		
+		return "/board/" + boardType + "/reRegister";
 	}
 	
-	@RequestMapping(value = "/reRegisterAction", method = RequestMethod.POST)
-	public String reRegisterAction(@RequestParam("obno") int obno, BoardVO vo, SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
+	@RequestMapping(value = "/{boardType}/{url}/reRegisterAction", method = RequestMethod.POST)
+	public String articleReRegisterAction(@RequestParam("obno") int obno, BoardArticleVO vo, 
+			@PathVariable String boardType,	@PathVariable String url,
+			SearchCriteria pvo, RedirectAttributes rttr) throws Exception {
+		String userPW = vo.getPassword();
+		if(userPW != null && !userPW.isEmpty()) {
+			BCryptPasswordEncoder pwEncoder = new BCryptPasswordEncoder(10);
+			String encodePW = pwEncoder.encode(userPW);
+			vo.setPassword(encodePW);
+		}
 		service.reRegist(vo, obno);
 		
-		rttr.addAttribute("page", pvo.getPage());
-		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
-		rttr.addAttribute("searchType", pvo.getSearchType());
-		rttr.addAttribute("keyword", pvo.getKeyword());
+//		BoardBoardVO urlBoardVO = new BoardBoardVO();
+//		urlBoardVO.setUrl(url);
+//		BoardBoardVO boardVO = boardService.selectUrlBoard(urlBoardVO);
+//		rttr.addAttribute("boardVO", boardVO);
+//		
+//		rttr.addAttribute("page", pvo.getPage());
+//		rttr.addAttribute("perPageNum", pvo.getPerPageNum());
+//		rttr.addAttribute("searchType", pvo.getSearchType());
+//		rttr.addAttribute("keyword", pvo.getKeyword());
 		
-		return "redirect:/list";
+		return "redirect:/board/" + boardType + "/" + url + "/list";
 	}
-	
-	@RequestMapping(value = "/modal")
-	public void modal(Model model) throws Exception{
-		BoardVO notice = service.readNotice();
-		model.addAttribute("noticeVO", notice);
-	}
-	
-	@RequestMapping("/imgUp")
-	public void doImgUp(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		int maxRequestSize = 1024 * 1024 * 50;
-		
-		request.setCharacterEncoding("UTF-8");
-		String path = "/resources/upload"; // 개발자 지정 폴더
-//		String real_save_path = "D:/upload";
-		String real_save_path = request.getSession().getServletContext().getRealPath(path);	
-//		System.out.println(real_save_path);
-		File Folder = new File(real_save_path);
-		System.out.println(real_save_path);
-
-		// 해당 디렉토리가 없을경우 디렉토리를 생성합니다.
-		if (!Folder.exists()) {
-			try {
-				Folder.mkdir(); // 폴더 생성합니다.
-//				System.out.println("폴더가 생성되었습니다.");
-			} catch (Exception e) {
-				e.getStackTrace();
-			}
-		} else {
-//			System.out.println("이미 폴더가 생성되어 있습니다.");
-		}
-		
-		MultipartRequest multi = new MultipartRequest(request, real_save_path, maxRequestSize, "UTF-8", new DefaultFileRenamePolicy());
-	
-//		Enumeration it = multi.getFileNames();
-//		String getFileName;
-//		while(it.hasMoreElements()){
-//			getFileName = (String) it.nextElement();
-//			System.out.println(getFileName);
-//			System.out.println(multi.getOriginalFileName(getFileName));
-//		}		
-		
-		String fileName_CK = multi.getOriginalFileName("upload"); // ckeditor5 static const
-		String fileName_popup = multi.getOriginalFileName("image"); // ckeditor5 static const
-		if(fileName_CK != null) {
-			JSONObject outData = new JSONObject();
-			outData.put("uploaded", true);
-			outData.put("url", request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/" + fileName_CK);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-			response.getWriter().print(outData.toString());
-		} else {
-			JSONObject outData = new JSONObject();
-			outData.put("uploaded", true);
-			outData.put("url", request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/" + fileName_popup);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-			response.getWriter().print(outData.toString());
-		}
-
-	}
-	
-	@RequestMapping(value ="/adminPage")
-	public String adminPage(HttpServletRequest request, Model model, @ModelAttribute("pvo") SearchCriteria pvo) throws Exception {
-        HttpSession session = request.getSession();
-        MemberVO loginVO = (MemberVO) session.getAttribute("loginVO"); 
-
-        if(loginVO.getIsAdmin() != 1){
-        	model.addAttribute("msg", "관리자만 접근 가능합니다.");
-        	return "/home";
-        }
-        
-		model.addAttribute("list", service.listSearch(pvo));
-
-		PageMaker pageMaker = new PageMaker();
-		pageMaker.setPvo(pvo);
-
-		pageMaker.setTotalCount(service.listSearchCount(pvo));
-		model.addAttribute("pageMaker", pageMaker);
-		
-//		BoardVO notice = service.readNotice();
-//		model.addAttribute("noticeVO", notice);
-        
-        return "/adminPage";
-	}
-	
-    /**
-     * 댓글 등록(Ajax)
-     * @param boardVO
-     * @param request
-     * @return
-     * @throws Exception
-     */
-    @RequestMapping(value="/board/addComment.do")
-    @ResponseBody
-    public String ajax_addComment(ReplyVO vo) throws Exception{        
-    	repService.writeReply(vo);
-    	
-        return "success";
-    }
-    
-    @RequestMapping(value="/board/addReComment.do")
-    @ResponseBody
-    public String ajax_addReComment(ReplyVO vo, @RequestParam("orno") int orno) throws Exception{        
-    	repService.writeReReply(vo, orno);
-    	
-        return "success";
-    }
-	
-	/**
-     * 게시물 댓글 불러오기(Ajax)
-     * @param boardVO
-     * @param request
-     * @return
-     * @throws Exception
-     */
-    @RequestMapping(value="/board/commentList.do", produces="application/json; charset=utf8")
-    @ResponseBody
-    public ResponseEntity ajax_commentList(@ModelAttribute("boardVO") BoardVO boardVO, HttpServletRequest request) throws Exception{
-        
-        HttpHeaders responseHeaders = new HttpHeaders();
-        ArrayList<HashMap> hmlist = new ArrayList<HashMap>();
-        
-        // 해당 게시물 댓글
-        List<ReplyVO> commentVO = repService.readReply(boardVO.getBno());
-        
-        if(commentVO.size() > 0){
-            for(int i=0; i<commentVO.size(); i++){
-                HashMap hm = new HashMap();
-                hm.put("bno", commentVO.get(i).getBno());
-                hm.put("content", commentVO.get(i).getContent());
-                hm.put("writer", commentVO.get(i).getWriter());
-                hm.put("regDate", commentVO.get(i).getRegStr());
-                hm.put("rno", commentVO.get(i).getRno());
-                hm.put("re_depth", commentVO.get(i).getRe_depth());
-                
-                hmlist.add(hm);
-            }
-            
-        }
-        
-        JSONArray json = new JSONArray(hmlist);        
-        return new ResponseEntity(json.toString(), responseHeaders, HttpStatus.CREATED);
-        
-    }
-
 }

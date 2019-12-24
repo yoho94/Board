@@ -4,7 +4,8 @@
 <html>
 <head>
 <title>회원가입</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 </head>
 <script>
 

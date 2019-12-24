@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>차트 페이지</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 <link rel="stylesheet" type="text/css" href="/resources/css/card.css">
 <script type="text/javascript">
 	var chartLabels = []; // 받아올 데이터를 저장할 배열 선언

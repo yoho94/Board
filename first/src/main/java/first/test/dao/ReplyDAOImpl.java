@@ -1,5 +1,6 @@
 package first.test.dao;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -21,8 +22,8 @@ public class ReplyDAOImpl implements ReplyDAO {
 	
 	// 댓글 조회
 	@Override
-	public List<ReplyVO> readReply(int bno) throws Exception {
-		return sql.selectList(namespace + ".readReply", bno);
+	public List<ReplyVO> readReply(HashMap<String, Object> map) throws Exception {
+		return sql.selectList(namespace + ".readReply", map);
 	}
 
 	// 댓글 작성
@@ -30,11 +31,6 @@ public class ReplyDAOImpl implements ReplyDAO {
 	public void writeReply(ReplyVO vo) throws Exception {
 		sql.insert(namespace + ".writeReply", vo);		
 	}
-	@Override
-	public void writeReplyUpdate(ReplyVO vo) throws Exception {
-		sql.insert(namespace + ".writeReplyUpdate", vo);
-	}
-
 
 	// 특정 댓글 조회
 	@Override
@@ -51,7 +47,7 @@ public class ReplyDAOImpl implements ReplyDAO {
 	// 댓글 삭제
 	@Override
 	public void replyDelete(ReplyVO vo) throws Exception {
-		sql.delete(namespace + ".deleteReply", vo);
+		sql.update(namespace + ".deleteReply", vo);
 	}
 	
 	@Override
@@ -59,14 +55,17 @@ public class ReplyDAOImpl implements ReplyDAO {
 		sql.delete(namespace + ".deleteAll",bno);
 		
 	}
+
+	@Override
+	public Integer updateGood(ReplyVO vo) throws Exception {
+		return sql.update(namespace + ".updateGood", vo);
+	}
+
+	@Override
+	public Integer updateBad(ReplyVO vo) throws Exception {
+		return sql.update(namespace + ".updateBad", vo);
+	}
 	
-	@Override
-	public int reInsert(ReplyVO vo) throws Exception {
-		return sql.insert(namespace+".reInsert", vo);		
-	}
-	@Override
-	public int reUpdate(ReplyVO vo) throws Exception {
-		return sql.update(namespace+".reUpdate", vo);		
-	}
+	
 	
 }

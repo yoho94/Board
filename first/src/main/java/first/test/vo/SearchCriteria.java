@@ -1,6 +1,7 @@
 package first.test.vo;
 
 import java.util.Date;
+import java.util.HashMap;
 
 public class SearchCriteria extends PageVO{
 	private String searchType;
@@ -8,7 +9,16 @@ public class SearchCriteria extends PageVO{
 	private Date startDate;
 	private Date endDate;
 	
-	
+	@Override
+	public HashMap<String, Object> getHashMap() {
+		HashMap<String, Object> map = super.getHashMap();
+		map.put("searchType", searchType);
+		map.put("keyword", keyword);
+		map.put("startDate", startDate);
+		map.put("endDate", endDate);
+		
+		return map;
+	}
 	
 	public Date getStartDate() {
 		return startDate;

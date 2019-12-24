@@ -1,5 +1,6 @@
 package first.test.interceptor;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.web.savedrequest.Enumerator;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -26,7 +28,12 @@ public class LogInterceptor extends HandlerInterceptorAdapter{
 	private static final String VERSION_SEPARATOR = ".";
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws Exception {           	   	
+            throws Exception { 
+    	
+    	//test
+//    	Enumeration enu = request.getAttributeNames();    	
+//    	System.out.println(enu.toString());
+    	//test
 
     	Map<String, Object> dataMap = new HashMap<>();
     	String path = request.getServletPath();

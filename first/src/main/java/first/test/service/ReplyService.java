@@ -7,7 +7,7 @@ import first.test.vo.ReplyVO;
 public interface ReplyService {
 
 	// 댓글 조회
-	public List<ReplyVO> readReply(int bno) throws Exception;
+	public List<ReplyVO> readReply(int bno, String orderType) throws Exception;
 
 	// 댓글 작성
 	public void writeReply(ReplyVO vo) throws Exception;
@@ -22,5 +22,6 @@ public interface ReplyService {
 	public void replyDelete(ReplyVO vo) throws Exception;
 	public void replyDeleteAll(int bno) throws Exception;
 	
-	public int writeReReply(ReplyVO vo, int rno) throws Exception;
+	public Integer updateGood(ReplyVO vo) throws Exception;
+	public Integer updateBad(ReplyVO vo) throws Exception;
 }

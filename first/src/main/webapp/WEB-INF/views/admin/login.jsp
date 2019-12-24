@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>관리자 페이지</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 </head>
 <body>
 	<div class='container'>

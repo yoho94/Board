@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
-import first.test.vo.BoardVO;
+import first.test.vo.BoardArticleVO;
 import first.test.vo.SearchCriteria;
 import first.test.vo.UserAgentVO;
 

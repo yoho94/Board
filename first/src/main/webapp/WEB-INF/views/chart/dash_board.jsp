@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>차트 페이지</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 <!-- <script -->
 <!-- 	src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script> -->
 <!-- <script -->

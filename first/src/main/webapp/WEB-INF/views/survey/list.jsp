@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>게시판</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 </head>
 <c:if test="${list.size() == 0}">
 	<script>

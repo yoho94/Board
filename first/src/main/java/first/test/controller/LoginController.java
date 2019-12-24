@@ -93,7 +93,7 @@ public class LoginController {
 		try {
 			tmp = memberService.idCheck(userId.trim());
 		} catch(Exception e) {
-			System.out.println(e.toString());
+//			System.out.println(e.toString());
 			tmp = 1;
 		}
 		return tmp+"";
@@ -105,7 +105,7 @@ public class LoginController {
 		try {
 			tmp = memberService.nameCheck(userName.trim());
 		} catch(Exception e) {
-			System.out.println(e.toString());
+//			System.out.println(e.toString());
 			tmp = 1;
 		}
 		return tmp+"";

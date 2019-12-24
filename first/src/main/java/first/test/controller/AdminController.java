@@ -1,19 +1,26 @@
 package first.test.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,13 +30,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.oreilly.servlet.MultipartRequest;
 import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
+import first.test.service.BoardBoardService;
 import first.test.service.MemberService;
+import first.test.service.MenuService;
 import first.test.service.PopupService;
 import first.test.service.SurveyService;
+import first.test.vo.BoardBoardVO;
 import first.test.vo.CategoryVO;
 import first.test.vo.MemberVO;
+import first.test.vo.MenuVO;
+import first.test.vo.PageMaker;
 import first.test.vo.PopupVO;
 import first.test.vo.QuestionCodeVO;
+import first.test.vo.SearchCriteria;
 import first.test.vo.SurveyQuestionVO;
 
 @Controller
@@ -42,8 +55,110 @@ public class AdminController {
 	private SurveyService surveyService;
 	@Inject
 	private PopupService popupService;
+	@Inject
+	private BoardBoardService boardService;
+	@Inject
+	private MenuService menuService;
 
 	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
+	
+	// 메뉴 관리 시작
+
+	// 메뉴 관리 리스트
+	@RequestMapping(value = "/ajax/menuList", method = RequestMethod.POST)
+	public void getMenuList(Model model) throws Exception {
+		model.addAttribute("list", menuService.selectAdminMenuList());
+	}
+
+	// 메뉴 작성 및 수정 모달
+	@RequestMapping(value = "/ajax/menuWrite", method = RequestMethod.POST)
+	public void getMenuWrite(Model model, MenuVO vo) throws Exception {
+		if (vo != null && vo.getSeq() != null && vo.getSeq() > 0) {
+			model.addAttribute("vo", menuService.selectMenu(vo));
+		}
+	}
+
+	// 메뉴 작성 액션
+	@RequestMapping(value = "/ajax/menuWrite.action", method = RequestMethod.POST)
+	@ResponseBody
+	public boolean getMenuWriteAction(Model model, MenuVO vo, Integer originalOrder, Integer isUpdate)
+			throws Exception {
+		Integer tmp;
+		if (isUpdate != null && isUpdate > 0) {
+			tmp = menuService.updateMenu(vo, originalOrder);
+		} else {
+			tmp = menuService.insertMenu(vo);
+		}
+
+		return (tmp != null && tmp > 0);
+	}
+
+	// 메뉴 순서 이동 액션
+	@RequestMapping(value = "/ajax/updateMenuOrderSortable.ajax", method = RequestMethod.POST)
+	@ResponseBody
+	public boolean getUpdateMenuOrderSortable(Model model, MenuVO vo, Integer originalOrder) throws Exception {
+		Integer update = menuService.updateMenuOrderSortable(vo, originalOrder);
+		return (update != null && update > 0);
+	}	
+	// 메뉴 관리 끝
+	
+	//게시판 관리 시작
+	
+	//게시판 관리 목록 보기
+	@RequestMapping(value = "/ajax/boardList", method = RequestMethod.POST)
+	public void getBoardList(Model model, Integer page, Integer perPageNum, String searchType, String keyword) throws Exception {
+		SearchCriteria pvo = new SearchCriteria(searchType, keyword);
+		pvo.setPage(page);
+		pvo.setPerPageNum(perPageNum);
+		
+		model.addAttribute("list", boardService.selectBoardList(pvo));
+		
+		PageMaker pageMaker = new PageMaker();
+		pageMaker.setPvo(pvo);
+		pageMaker.setTotalCount(boardService.selectBoardListTotCnt());		
+		model.addAttribute("pageMaker", pageMaker);
+		model.addAttribute("pvo", pvo);
+	}
+	
+	//게시판 작성 및 수정 모달
+	@RequestMapping(value = "/ajax/boardWrite", method = RequestMethod.POST)
+	public void getBoardWrite(Model model, BoardBoardVO vo) throws Exception {
+		if(vo.getBoardId() != null && vo.getBoardId() > 0) {
+			model.addAttribute("vo", boardService.selectBoard(vo));
+		}
+	}
+	
+	//게시판 URL 검사
+	@RequestMapping(value = "/ajax/urlCheck", method = RequestMethod.POST)
+	@ResponseBody
+	public boolean getUrlCheck(Model model, BoardBoardVO vo) throws Exception {
+		BoardBoardVO boardVO = boardService.selectUrlBoard(vo);
+		return (boardVO == null);
+	}
+	
+	//게시판 작성 액션
+	@RequestMapping(value = "/ajax/boardWrite.action", method = RequestMethod.POST)
+	@ResponseBody
+	public boolean getBoardWriteAction(Model model, BoardBoardVO vo, Integer originalOrder, Integer isUpdate) throws Exception {
+		Integer tmp;
+		if(isUpdate != null && isUpdate > 0) {
+			tmp = boardService.updateBoard(vo, originalOrder);
+		} else {
+			tmp = boardService.insertBoard(vo);
+		}
+		
+		return (tmp != null && tmp > 0);
+	}
+	
+	//게시판 순서 이동 액션
+	@RequestMapping(value = "/ajax/updateBoardOrderSortable.ajax", method = RequestMethod.POST)
+	@ResponseBody
+	public boolean getUpdateBoardOrderSortable(Model model, BoardBoardVO vo, Integer originalOrder) throws Exception {
+		Integer update = boardService.updateBoardOrderSortable(vo, originalOrder);
+		return (update != null && update > 0);
+	}
+	
+	//게시판 관리 끝
 	
 	@RequestMapping(value = "/home")
 	public void homePage(Model model, String msg) throws Exception {
@@ -56,7 +171,7 @@ public class AdminController {
 		
 		MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");		
 		if (loginVO.getIsAdmin() != 1) {
-			return "redirect:/list";
+			return "redirect:/board/list";
 		}
 		
 		model.addAttribute("msg", msg);
@@ -97,6 +212,99 @@ public class AdminController {
 			break;
 		}
 		memberService.updateAdmin(vo);
+	}
+	
+	@RequestMapping(value = "/member/excelUpload.ajax", method = RequestMethod.POST)
+	@ResponseBody
+	public String excelUpload(HttpServletRequest request) throws Exception {
+		request.setCharacterEncoding("UTF-8");
+		String path = "/resources/upload"; // 개발자 지정 폴더
+//		String real_save_path = "D:/upload";
+		String real_save_path = request.getSession().getServletContext().getRealPath(path);	
+//		System.out.println(real_save_path);
+		File Folder = new File(real_save_path);
+//		System.out.println(real_save_path);
+
+		// 해당 디렉토리가 없을경우 디렉토리를 생성합니다.
+		if (!Folder.exists()) {
+			try {
+				Folder.mkdir(); // 폴더 생성합니다.
+//				System.out.println("폴더가 생성되었습니다.");
+			} catch (Exception e) {
+				e.getStackTrace();
+			}
+		} else {
+//			System.out.println("이미 폴더가 생성되어 있습니다.");
+		}
+		
+		MultipartRequest mpr = new MultipartRequest(request, real_save_path);
+		FileInputStream fis = new FileInputStream(mpr.getFile("excel"));
+		HSSFWorkbook workbook = new HSSFWorkbook(fis);
+		int rowindex=0;
+		int columnindex=0;
+		HSSFSheet sheet=workbook.getSheetAt(0);
+		
+		List<MemberVO> members = new ArrayList<>();
+		
+		//행의 수
+		int rows=sheet.getPhysicalNumberOfRows();
+		for(rowindex=1;rowindex<rows;rowindex++){
+		    //행을 읽는다
+		    HSSFRow row=sheet.getRow(rowindex);
+		    if(row !=null){
+		    	try {
+		    		MemberVO member = new MemberVO();
+			    	String userId = row.getCell(0).getStringCellValue();
+			    	String userPass = row.getCell(1).getStringCellValue();
+			    	String userName = row.getCell(2).getStringCellValue();
+			    	String isAdmin = row.getCell(3).getStringCellValue();
+			    	String isUsing = row.getCell(4).getStringCellValue();
+			    	
+			    	member.setUserId(userId);
+			    	member.setUserPass(userPass);		    	
+			    	member.setUserName(userName);
+			    	member.setIsAdmin(Integer.parseInt(isAdmin));
+			    	member.setIsUsing(isUsing.charAt(0));
+			    	logger.info(member.toString());
+			    	
+			    	if(!member.valid())
+			    		return "ERROR\nROW : " + rowindex;
+			    	
+			    	memberService.register(member);
+			    	
+				} catch (Exception e) {
+					logger.error(e.toString());
+					return "ERROR\nROW : " + rowindex;
+				}		    	
+		    }
+		}
+		
+		return "finish";
+	}
+	
+	@RequestMapping("/member/sample.xls")
+	public void sampleExcel(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		HSSFWorkbook workbook = new HSSFWorkbook(); // 새 엑셀 생성
+        HSSFSheet sheet = workbook.createSheet(); // 새 시트(Sheet) 생성
+        HSSFRow row = sheet.createRow(0); // 엑셀의 행은 0번부터 시작
+    	HSSFCell cell = row.createCell(0); // 행의 셀은 0번부터 시작
+    	cell.setCellValue("회원 아이디");
+    	row.createCell(1).setCellValue("회원 비밀번호");
+    	row.createCell(2).setCellValue("회원 이름");
+    	row.createCell(3).setCellValue("관리자 여부 (0, 1)");
+    	row.createCell(4).setCellValue("회원 사용 여부 (Y, N)");
+    	
+    	row = sheet.createRow(1); // 엑셀의 행은 0번부터 시작
+    	row.createCell(0).setCellValue("hong_gil_dong");
+    	row.createCell(1).setCellValue("PASSWORD");
+    	row.createCell(2).setCellValue("홍길동");
+    	row.createCell(3).setCellValue("0");
+    	row.createCell(4).setCellValue("N");
+    	
+		OutputStream os = response.getOutputStream();
+		workbook.write(os);
+		os.close();   
+		
 	}
 	
 	// 설문

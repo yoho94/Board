@@ -8,7 +8,8 @@
 	</select>
 	
 	<insert id="register">
-		INSERT INTO member(userId, userPass, userName) values(#{userId}, #{userPass}, #{userName})
+		INSERT INTO member(userId, userPass, userName, isAdmin, isUsing) 
+		values(#{userId}, #{userPass}, #{userName}, #{isAdmin}, #{isUsing})
 	</insert>
 	
 	<select id='idCheck' resultType="int">

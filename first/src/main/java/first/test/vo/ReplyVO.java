@@ -5,55 +5,54 @@ import java.util.Date;
 
 public class ReplyVO {
 
-	private int bno;
-	private int rno;
+	private Integer bno;
+	private Integer rno;
+	private Integer good_score;
+	private Integer bad_score;
+	private Integer parent;
 	private String content;
 	private String writer;
 	private Date regDate;
+	private Integer isDelete;
 	
-	private int re_group;
-	private int re_sorts;
-	private int re_depth;
-	
-	private int isDelete;
+	private Integer re_depth;
 	
 	
-	
-	public int getRe_group() {
-		return re_group;
-	}
-	public void setRe_group(int re_group) {
-		this.re_group = re_group;
-	}
-	public int getRe_sorts() {
-		return re_sorts;
-	}
-	public void setRe_sorts(int re_sorts) {
-		this.re_sorts = re_sorts;
-	}
-	public int getRe_depth() {
+	public Integer getRe_depth() {
 		return re_depth;
 	}
-	public void setRe_depth(int re_depth) {
+	public void setRe_depth(Integer re_depth) {
 		this.re_depth = re_depth;
 	}
-	public int getIsDelete() {
-		return isDelete;
-	}
-	public void setIsDelete(int isDelete) {
-		this.isDelete = isDelete;
-	}
-	public int getBno() {
+	public Integer getBno() {
 		return bno;
 	}
-	public void setBno(int bno) {
+	public void setBno(Integer bno) {
 		this.bno = bno;
 	}
-	public int getRno() {
+	public Integer getRno() {
 		return rno;
 	}
-	public void setRno(int rno) {
+	public void setRno(Integer rno) {
 		this.rno = rno;
+	}	
+	public Integer getGood_score() {
+		return good_score;
+	}
+	public void setGood_score(Integer good_score) {
+		this.good_score = good_score;
+	}
+	public Integer getBad_score() {
+		return bad_score;
+	}
+	public void setBad_score(Integer bad_score) {
+		this.bad_score = bad_score;
+	}
+	public Integer getParent() {
+		return parent;
+	}
+	public void setParent(Integer parent) {
+		this.parent = parent;
 	}
 	public String getContent() {
 		return content;
@@ -73,18 +72,24 @@ public class ReplyVO {
 	public void setRegDate(Date regDate) {
 		this.regDate = regDate;
 	}
+	public String getRegDateStr() {
+		if(regDate == null)
+			return null;
+		SimpleDateFormat foramt = new SimpleDateFormat("yyyy년 MM월 dd일 E요일 HH:mm:ss");
+		return foramt.format(regDate);
+	}
+	public Integer getIsDelete() {
+		return isDelete;
+	}
+	public void setIsDelete(Integer isDelete) {
+		this.isDelete = isDelete;
+	}
 	@Override
 	public String toString() {
-		return "ReplyVO [bno=" + bno + ", rno=" + rno + ", content=" + content + ", writer=" + writer + ", regDate="
-				+ regDate + "]";
+		return "ReplyVO [bno=" + bno + ", rno=" + rno + ", good_score=" + good_score + ", bad_score=" + bad_score
+				+ ", parent=" + parent + ", content=" + content + ", writer=" + writer + ", regDate=" + regDate
+				+ ", isDelete=" + isDelete + ", re_depth=" + re_depth + "]";
 	}
-	
-	public String getRegStr() {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd (E) hh:mm");
-		return format.format(regDate);
-	}
-
-	
 	
 	
 }

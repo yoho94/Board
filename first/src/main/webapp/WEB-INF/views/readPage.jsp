@@ -244,7 +244,7 @@ function getCommentList(){
 		<div>
 			<button type="submit" class="btn btn-default" id='modify'>수정</button>
 			<button type="submit" class="btn btn-default" id='remove'>삭제</button>	
-			<c:if test="${boardVO.isNotice == 0 }">
+			<c:if test="${boardVO.isNotice == 'N' }">
 			<button type="submit" class="btn btn-default" id='reWrite'>답글</button>
 			</c:if>
 			<button type="button" class="btn btn-default" id='list'>닫기</button>

@@ -1,17 +1,51 @@
-CREATE TABLE `board_tbl` (
-  `bno` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) NOT NULL,
-  `content` text NOT NULL,
-  `writer` varchar(45) NOT NULL,
-  `regdate` datetime DEFAULT CURRENT_TIMESTAMP,
-  `viewcnt` int(11) DEFAULT '0',
+CREATE TABLE `board_article` (
+  `boardId` int(11) DEFAULT NULL COMMENT '게시판의 아이디',
+  `bno` int(11) NOT NULL AUTO_INCREMENT COMMENT '게시물의 아이디',
+  `title` varchar(200) NOT NULL COMMENT '제목',
+  `content` text NOT NULL COMMENT '본문',
+  `regDate` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '생성(작성) 일',
+  `writer` varchar(45) NOT NULL COMMENT '작성자 아이디',
+  `modDate` datetime DEFAULT NULL COMMENT '수정일',
+  `modWriter` varchar(45) DEFAULT NULL COMMENT '수정자의 아이디',
+  `password` varchar(500) DEFAULT NULL COMMENT '게시글 비밀번호',
+  `viewCnt` int(11) DEFAULT '0',
   `re_group` int(11) DEFAULT '0',
   `re_sorts` int(11) DEFAULT '0',
   `re_depth` int(11) DEFAULT '0',
-  `isDelete` tinyint(4) DEFAULT '0',
-  `isNotice` tinyint(4) DEFAULT '0',
+  `isDelete` char(1) DEFAULT 'N',
+  `isNotice` char(1) DEFAULT 'N',
+  `isSecret` char(1) DEFAULT 'N',
   PRIMARY KEY (`bno`)
-) ENGINE=InnoDB AUTO_INCREMENT=618 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=667 DEFAULT CHARSET=utf8 COMMENT='게시물의 테이블'
+
+CREATE TABLE `board_board` (
+  `boardId` int(11) NOT NULL AUTO_INCREMENT COMMENT '게시판의 아이디',
+  `boardType` varchar(45) DEFAULT 'basic' COMMENT '게시판의 타입 (일반, 설문, 알림 등)',
+  `note` text COMMENT '게시판설명',
+  `name` varchar(100) DEFAULT NULL COMMENT '게시판 이름',
+  `order` int(11) DEFAULT NULL COMMENT '게시판 노출 순서',
+  `isRpy` char(1) DEFAULT 'N' COMMENT '게시판 답글 사용여부',
+  `isComment` char(1) DEFAULT 'N' COMMENT '게시판 덧글 사용여부',
+  `isSecret` char(1) DEFAULT 'N' COMMENT '게시판 비밀글 사용여부',
+  `isNotice` char(1) DEFAULT 'N' COMMENT '게시판 공지 사용여부',
+  `isUse` char(1) DEFAULT 'N' COMMENT '게시판 사용여부',
+  `url` varchar(100) NOT NULL COMMENT '게시판의 URL',
+  `regDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  `regId` varchar(100) DEFAULT NULL,
+  `modDate` datetime DEFAULT NULL,
+  `modId` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`boardId`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COMMENT='게시판의 테이블'
+
+CREATE TABLE `board_read_tbl` (
+  `userId` varchar(50) NOT NULL,
+  `bno` int(11) NOT NULL,
+  `regDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  `regId` varchar(100) DEFAULT NULL,
+  `modDate` datetime DEFAULT NULL,
+  `modId` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`userId`,`bno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='유저 별 읽음, 안읽음 표시'
 
 CREATE TABLE `category_code` (
   `category_code` int(11) NOT NULL AUTO_INCREMENT COMMENT '카테고리코드',
@@ -28,7 +62,7 @@ CREATE TABLE `dashboard` (
   `boardOrder` int(11) DEFAULT '0',
   `width` int(1) DEFAULT '1',
   PRIMARY KEY (`seq`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8
 
 CREATE TABLE `member` (
   `userId` varchar(50) NOT NULL,
@@ -38,6 +72,16 @@ CREATE TABLE `member` (
   `isUsing` varchar(1) DEFAULT 'Y',
   PRIMARY KEY (`userId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `menu` (
+  `seq` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) DEFAULT NULL,
+  `order` int(11) DEFAULT NULL,
+  `url` varchar(45) DEFAULT NULL,
+  `isUse` char(1) DEFAULT 'N',
+  `type` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`seq`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8
 
 CREATE TABLE `myreply` (
   `bno` int(11) NOT NULL,
@@ -49,8 +93,9 @@ CREATE TABLE `myreply` (
   `re_sorts` int(11) DEFAULT '0',
   `re_depth` int(11) DEFAULT '0',
   `isDelete` int(11) DEFAULT '0',
+  `score` int(11) DEFAULT '0',
   PRIMARY KEY (`rno`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8
 
 CREATE TABLE `popup` (
   `seq` int(11) NOT NULL AUTO_INCREMENT,
@@ -78,6 +123,19 @@ CREATE TABLE `question_code` (
   `mod_date` datetime DEFAULT NULL COMMENT '수정일자',
   PRIMARY KEY (`question_code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8 COMMENT='문항 코드'
+
+CREATE TABLE `reply` (
+  `bno` int(11) NOT NULL,
+  `rno` int(11) NOT NULL AUTO_INCREMENT,
+  `content` text NOT NULL,
+  `writer` varchar(45) NOT NULL,
+  `regDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  `parent` int(11) DEFAULT '0',
+  `isDelete` int(11) DEFAULT '0',
+  `good_score` int(11) DEFAULT '0',
+  `bad_score` int(11) DEFAULT '0',
+  PRIMARY KEY (`rno`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8
 
 CREATE TABLE `survey_answer` (
   `survey_seq` int(11) NOT NULL COMMENT '기본키(순번)',
@@ -137,4 +195,169 @@ CREATE TABLE `useragent` (
   `referer` text,
   `path` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`seq`)
-) ENGINE=InnoDB AUTO_INCREMENT=8930 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=17535 DEFAULT CHARSET=utf8
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `uaInsert`(size int)
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE ipaddr varchar(45) default concat(Floor( Rand() * 255 ),'.',Floor( Rand() * 255 ),'.',Floor( Rand() * 255 ),'.',Floor( Rand() * 255 ));  
+    
+    WHILE i <= size DO		
+        INSERT INTO `useragent`
+        (`ip`,`date`, `id`,`osName`,`osVersion`,`browserName`,
+        `browserVersion`,`deviceBrand`,`deviceModel`,`referer`,`path`)
+          VALUES
+          (ipaddr, FROM_UNIXTIME(FLOOR(unix_timestamp('2000-01-01 00:00:00')+(RAND()*(unix_timestamp('2019-11-16 00:00:00')-unix_timestamp('2000-01-01 00:00:00'))))), NULL, 'Windows 10', '', 'Chrome', '78.0', NULL, NULL, NULL, '/');
+        SET i = i + 1;
+    END WHILE;
+END
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `loopInsert`()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+        
+    WHILE i <= 500 DO
+        INSERT INTO BOARD_TBL(title , content, writer)
+          VALUES(concat('제목',i), concat('내용',i), concat('작성자',i));
+        SET i = i + 1;
+    END WHILE;
+END
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `get_reply_list_new`(searchBno INT) RETURNS int(11)
+    READS SQL DATA
+BEGIN
+	DECLARE _parent INT;
+    DECLARE _rank INT;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET @id = NULL;
+
+    SET _parent = @id;
+    SET _rank = 0;
+
+    IF @id IS NULL THEN
+            RETURN NULL;
+    END IF;
+
+    LOOP
+        SET @innerrank = 0;
+        SELECT p.id 
+        INTO   @id
+        FROM   (
+                SELECT   rno as id, @innerrank := @innerrank+1 AS rank 
+                FROM     reply 
+                WHERE    COALESCE(parent, 0) = _parent AND bno = searchBno
+                ORDER BY                 
+                COALESCE(parent, rno) DESC, regDate ASC
+                ) p 
+        WHERE   p.rank > _rank LIMIT 0, 1;
+        IF @id IS NOT NULL OR _parent = @start_with THEN
+                SET @level = @level + 1;
+                RETURN @id;
+        END IF;
+        SET @level := @level - 1;
+        SET @innerrank = 0;
+        SELECT COALESCE(p.parent, 0), p.rank
+        INTO   _parent, _rank
+        FROM   (
+                SELECT rno as id, parent as parent, @innerrank := @innerrank+1 AS rank
+                FROM    reply
+                WHERE   COALESCE(parent, 0) = (
+                    SELECT COALESCE(parent, 0) FROM reply WHERE rno = _parent
+                    )  AND bno = searchBno
+                ORDER BY COALESCE(parent, rno) DESC, regDate ASC
+               ) p
+        WHERE p.id = _parent;
+    END LOOP;
+END
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `get_reply_list_old`(searchBno INT) RETURNS int(11)
+    READS SQL DATA
+BEGIN
+	DECLARE _parent INT;
+    DECLARE _rank INT;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET @id = NULL;
+
+    SET _parent = @id;
+    SET _rank = 0;
+
+    IF @id IS NULL THEN
+            RETURN NULL;
+    END IF;
+
+    LOOP
+        SET @innerrank = 0;
+        SELECT p.id 
+        INTO   @id
+        FROM   (
+                SELECT   rno as id, @innerrank := @innerrank+1 AS rank 
+                FROM     reply 
+                WHERE    COALESCE(parent, 0) = _parent AND bno = searchBno
+                ORDER BY                 
+                COALESCE(parent, rno) ASC, regDate DESC
+                ) p 
+        WHERE   p.rank > _rank LIMIT 0, 1;
+        IF @id IS NOT NULL OR _parent = @start_with THEN
+                SET @level = @level + 1;
+                RETURN @id;
+        END IF;
+        SET @level := @level - 1;
+        SET @innerrank = 0;
+        SELECT COALESCE(p.parent, 0), p.rank
+        INTO   _parent, _rank
+        FROM   (
+                SELECT rno as id, parent as parent, @innerrank := @innerrank+1 AS rank
+                FROM    reply
+                WHERE   COALESCE(parent, 0) = (
+                    SELECT COALESCE(parent, 0) FROM reply WHERE rno = _parent
+                    )  AND bno = searchBno
+                ORDER BY COALESCE(parent, rno) ASC, regDate DESC
+               ) p
+        WHERE p.id = _parent;
+    END LOOP;
+END
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `get_reply_list_score`(searchBno INT) RETURNS int(11)
+    READS SQL DATA
+BEGIN
+	DECLARE _parent INT;
+    DECLARE _rank INT;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET @id = NULL;
+
+    SET _parent = @id;
+    SET _rank = 0;
+
+    IF @id IS NULL THEN
+            RETURN NULL;
+    END IF;
+
+    LOOP
+        SET @innerrank = 0;
+        SELECT p.id 
+        INTO   @id
+        FROM   (
+                SELECT   rno as id, @innerrank := @innerrank+1 AS rank , (good_score - bad_score) as score
+                FROM     reply 
+                WHERE    COALESCE(parent, 0) = _parent AND bno = searchBno
+                ORDER BY                 
+                COALESCE(parent, rno) ASC, score DESC
+                ) p 
+        WHERE   p.rank > _rank LIMIT 0, 1;
+        IF @id IS NOT NULL OR _parent = @start_with THEN
+                SET @level = @level + 1;
+                RETURN @id;
+        END IF;
+        SET @level := @level - 1;
+        SET @innerrank = 0;
+        SELECT COALESCE(p.parent, 0), p.rank
+        INTO   _parent, _rank
+        FROM   (
+                SELECT rno as id, parent as parent, @innerrank := @innerrank+1 AS rank , (good_score - bad_score) as score
+                FROM    reply
+                WHERE   COALESCE(parent, 0) = (
+                    SELECT COALESCE(parent, 0) FROM reply WHERE rno = _parent
+                    )  AND bno = searchBno
+                ORDER BY COALESCE(parent, rno) ASC, score DESC
+               ) p
+        WHERE p.id = _parent;
+    END LOOP;
+END
+

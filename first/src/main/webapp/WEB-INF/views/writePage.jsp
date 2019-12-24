@@ -42,28 +42,36 @@ $(document).ready(function(){
 <body>
 	<div class='container' style="margin-top:50px;">
 		<form method="post" class='form-horizontal' action="/writePageAction" id='writeForm'>
+			<input type="hidden" name="boardId" value="${boardVO.boardId }">
 			<div class="box-body">
 				<div class="form-group">
-					<label for="exampleInputEmail1">제목</label> 
-				<c:if test="${loginVO.isAdmin == '1' }">
+					<label for="title">제목</label> 
+				<c:if test="${loginVO.isAdmin == '1' && boardVO.isNotice == 'Y'.charAt(0) }">
 				<div class='input-group-btn'>
 					<select name='isNotice' class='form-control'>
-						<option value='0'>일반</option>
-  						<option value='1'>공지</option>
+						<option value='N'>일반</option>
+  						<option value='Y'>공지</option>
 					</select>
 					</div>
 				</c:if>
 					<input type="text" name="title" class="form-control" placeholder="Enter Title" required="required">
 				</div>
 				<div class="form-group">
-					<label for="exampleInputPwd1">본문</label>
+					<label for="content">본문</label>
 					<textarea name="content" class="form-control"
 						placeholder="Enter Contents" id='editor'></textarea>
 				</div>
 				<div class="form-group">
-					<label for="exampleInputEmail1">작성자</label> <input type="text" id='writer' value='${loginVO.userName}'
+					<label for="writer">작성자</label> <input type="text" id='writer' value='${loginVO.userName}'
 											name="writer" class="form-control" placeholder="Enter Writer" required="required" readonly>
-				</div>				
+				</div>
+				<c:if test="${boardVO.isSecret == 'Y'.charAt(0) }">
+				<div class="form-group">
+					<label for="password">비밀번호가 없으면 공개 글이 됩니다.</label>
+					<input type="password" id='password' value='${loginVO.userName}'
+					name="password" class="form-control" placeholder="Enter Password">
+				</div>	
+				</c:if>		
 			</div>
 
 			<div class="box-footer">

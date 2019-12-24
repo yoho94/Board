@@ -39,10 +39,12 @@
             <exclude-mapping path="/MemberJoin"/>
             <exclude-mapping path="/idCheck"/>
             <exclude-mapping path="/nameCheck"/>
+            <exclude-mapping path="/board/navbar"/>
 <!--             <exclude-mapping path="/survey/info"/> -->
 <!--             <exclude-mapping path="/survey/list"/> -->
             <exclude-mapping path="/admin/showPopup"/>
-            <exclude-mapping path="/resources/**"/>        
+            <exclude-mapping path="/resources/**"/>
+            <exclude-mapping path="/board/sidenav*"/>        
             <beans:ref bean="LoginInterceptor"/>
         </interceptor>
     </interceptors>

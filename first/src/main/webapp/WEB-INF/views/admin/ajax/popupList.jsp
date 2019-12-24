@@ -74,7 +74,7 @@
 </div>
 
 <script>
-	$('table tbody tr').on('click', function() {
+	$('table tbody tr').off().on('click', function() {
 		var str = '';
 		var tr = $(this);
 		var td = tr.children();
@@ -138,7 +138,7 @@
 			});
 		});
 		
-		$('#showPopupBtn').on('click', function() {
+		$('#showPopupBtn').off().on('click', function() {
 			var url = "/admin/showPopup?seq=" + td.eq(0).text();
 			var option = "width=" + $('#width').val() + ", height=" + $('#height').val() + ", menubar=no, status=no, toolbar=no";
 			

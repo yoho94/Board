@@ -1,5 +1,6 @@
 package first.test.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -18,15 +19,19 @@ public class ReplyServiceImpl implements ReplyService {
 
 	// 댓글 조회
 	@Override
-	public List<ReplyVO> readReply(int bno) throws Exception {
-		return dao.readReply(bno);
+	public List<ReplyVO> readReply(int bno, String orderType) throws Exception {
+		HashMap<String, Object> map = new HashMap<>();
+		
+		map.put("bno", bno);
+		map.put("orderType", orderType);
+		
+		return dao.readReply(map);
 	}
 
 	// 댓글 작성
 	@Override
 	public void writeReply(ReplyVO vo) throws Exception {
 		dao.writeReply(vo);
-		dao.writeReplyUpdate(vo);
 	} 
 
 	// 특정 댓글 조회
@@ -51,16 +56,17 @@ public class ReplyServiceImpl implements ReplyService {
 	public void replyDeleteAll(int bno) throws Exception {
 		dao.replyDeleteAll(bno);		
 	}
-	
+
 	@Override
-	public int writeReReply(ReplyVO vo, int rno) throws Exception {
-		ReplyVO oVO = dao.readReplySelect(rno);
-		dao.reUpdate(oVO);
-		vo.setRe_group(oVO.getRe_group());
-		vo.setRe_sorts(oVO.getRe_sorts() + 1);
-		vo.setRe_depth(oVO.getRe_depth() + 1);
-		dao.reInsert(vo);
-		return 0;
+	public Integer updateGood(ReplyVO vo) throws Exception {
+		return dao.updateGood(vo);
 	}
+
+	@Override
+	public Integer updateBad(ReplyVO vo) throws Exception {
+		return dao.updateBad(vo);
+	}
+	
+	
  
 } 

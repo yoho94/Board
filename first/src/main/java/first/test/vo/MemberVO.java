@@ -5,13 +5,13 @@ public class MemberVO {
 	private String userId;
 	private String userPass;
 	private String userName;
-	private int isAdmin;
-	private char isUsing;
+	private Integer isAdmin;
+	private Character isUsing;
 	
-	public char getIsUsing() {
+	public Character getIsUsing() {
 		return isUsing;
 	}
-	public void setIsUsing(char isUsing) {
+	public void setIsUsing(Character isUsing) {
 		this.isUsing = isUsing;
 	}
 	public String getUserId() {
@@ -32,10 +32,10 @@ public class MemberVO {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	public int getIsAdmin() {
+	public Integer getIsAdmin() {
 		return isAdmin;
 	}
-	public void setIsAdmin(int isAdmin) {
+	public void setIsAdmin(Integer isAdmin) {
 		this.isAdmin = isAdmin;
 	}
 	
@@ -45,6 +45,27 @@ public class MemberVO {
 				+ isAdmin + "]";
 	}
 	
-	
+	public boolean valid() {
+		if(userId == null || userPass == null || userName == null || isAdmin == null || isUsing == null)
+			return false;
+		
+		if(userId.length() >= 25)
+			return false;
+		
+		if(userPass.length() >= 25)
+			return false;
+		
+		if(userName.length() >= 25)
+			return false;
+		
+		if(!(isAdmin == 0 || isAdmin == 1))
+			return false;
+		
+		if(!(isUsing == 'Y' || isUsing == 'N'))
+			return false;		
+		
+		
+		return true;
+	}
 		
 }

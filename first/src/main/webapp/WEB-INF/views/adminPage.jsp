@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>게시판</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <jsp:include page="/resources/include/navbar.jsp"></jsp:include> --%>
+<c:import url="/board/navbar"></c:import>
 </head>
 <script>
 //팝업오픈하여 폼데이터 Post 전송
@@ -108,6 +109,7 @@ $(document).ready(function(){
 			<colgroup>
 				<col width="5%">
 				<col width="5%">
+				<col width="15%">
 				<col>
 				<col width="10%">
 				<col width="15%">
@@ -118,6 +120,7 @@ $(document).ready(function(){
 				<tr>
 					<th>순번</th>
 					<th>번호</th>
+					<th>게시판 이름</th>
 					<th>제목</th>
 					<th>작성자</th>
 					<th>날짜</th>
@@ -129,6 +132,7 @@ $(document).ready(function(){
 				<tr>
 					<td>${(pageMaker.totalCount - status.index) - ( (pageMaker.pvo.page - 1)  *  pageMaker.pvo.perPageNum ) }</td>
 					<td>${boardVO.bno}</td>
+					<td>${boardVO.name }</td>
 					<td>
 						<form name='readForm' action='/readPage' method='post'
 							id='readForm'>
@@ -139,14 +143,14 @@ $(document).ready(function(){
 							<input type="hidden" name="searchType" value="${pvo.searchType}">
 							<input type="hidden" name="keyword" value="${pvo.keyword}">
 							<c:choose>
-							<c:when test="${boardVO.isDelete == 0 }">
+							<c:when test="${boardVO.isDelete == 'N'.charAt(0) }">
 							<c:forEach begin="1" end="${boardVO.re_depth}">&nbsp;&nbsp;&nbsp;</c:forEach>
 						<c:if test="${boardVO.re_depth > 0}">
 							<img src='/resources/img/icon_re.gif' alt='' />						
 						</c:if>
 							<input type='submit' id='readSubmit'
 								<c:choose>
-									<c:when test="${boardVO.isNotice == 0 }">									
+									<c:when test="${boardVO.isNotice == 'N'.charAt(0) }">									
 									style="border: solid 0px black; text-align: left; background-color: transparent;"
 									</c:when>
 									<c:otherwise>
@@ -164,7 +168,7 @@ $(document).ready(function(){
 					</td>
 					<td>${boardVO.writer}</td>
 					<td><fmt:formatDate pattern="yyyy-MM-dd HH:mm"
-							value="${boardVO.regdate}" /></td>
+							value="${boardVO.regDate}" /></td>
 					<td>${boardVO.viewcnt}</td>
 					<td>
 					<form name='delForm' method='post'

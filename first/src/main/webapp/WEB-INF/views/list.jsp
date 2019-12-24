@@ -7,7 +7,8 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>게시판</title>
-<jsp:include page="/resources/include/navbar.jsp"></jsp:include>
+<%-- <c:import url="/board/sidenav"></c:import> --%>
+<c:import url="/board/navbar"></c:import>
 </head>
 <script>
 //팝업오픈하여 폼데이터 Post 전송
@@ -123,14 +124,14 @@ $(document).ready(function(){
 							<input type="hidden" name="searchType" value="${pvo.searchType}">
 							<input type="hidden" name="keyword" value="${pvo.keyword}">
 							<c:choose>
-							<c:when test="${boardVO.isDelete == 0 }">
+							<c:when test="${boardVO.isDelete == 'N'.charAt(0) }">
 							<c:forEach begin="1" end="${boardVO.re_depth}">&nbsp;&nbsp;&nbsp;</c:forEach>
 						<c:if test="${boardVO.re_depth > 0}">
 							<img src='/resources/img/icon_re.gif' alt='' />						
 						</c:if>
 							<input type='submit' id='readSubmit'
 								<c:choose>
-									<c:when test="${boardVO.isNotice == 0 }">									
+									<c:when test="${boardVO.isNotice == 'N'.charAt(0) }">									
 									style="border: solid 0px black; text-align: left; background-color: transparent;"
 									</c:when>
 									<c:otherwise>
@@ -147,7 +148,7 @@ $(document).ready(function(){
 					</td>
 					<td>${boardVO.writer}</td>
 					<td><fmt:formatDate pattern="yyyy-MM-dd HH:mm"
-							value="${boardVO.regdate}" /></td>
+							value="${boardVO.regDate}" /></td>
 					<td>${boardVO.viewcnt}</td>
 				</tr>
 			</c:forEach>

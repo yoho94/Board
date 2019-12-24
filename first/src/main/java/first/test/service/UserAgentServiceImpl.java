@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Service;
 
 import first.test.dao.UserAgentDAO;
-import first.test.vo.BoardVO;
+import first.test.vo.BoardArticleVO;
 import first.test.vo.SearchCriteria;
 import first.test.vo.UserAgentVO;
 

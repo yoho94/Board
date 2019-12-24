@@ -31,10 +31,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.gson.Gson;
 
-import first.test.service.BoardService;
+import first.test.service.BoardArticleService;
 import first.test.service.DashBoardService;
 import first.test.service.UserAgentService;
-import first.test.vo.BoardVO;
+import first.test.vo.BoardArticleVO;
 import first.test.vo.DashBoardVO;
 import first.test.vo.MemberVO;
 import first.test.vo.PageMaker;
@@ -45,7 +45,7 @@ import first.test.vo.UserAgentVO;
 @RequestMapping("/chart")
 public class ChartController {
 	@Inject
-	private BoardService service;
+	private BoardArticleService service;
 	@Inject
 	private UserAgentService uaService;
 	@Inject
@@ -448,11 +448,11 @@ public class ChartController {
 		// JSONArray array = new JSONArray();
 		LinkedHashMap<Date, Integer> map = new LinkedHashMap<>();
 
-		List<BoardVO> listVO = service.selectDate();
+		List<BoardArticleVO> listVO = service.selectDate();
 		if (listVO.size() > 0) {
 			for (int i = 0; i < listVO.size(); i++) {
-				BoardVO vo = listVO.get(i);
-				Date key = new Date(vo.getRegdate().getYear(), vo.getRegdate().getMonth(), vo.getRegdate().getDate());
+				BoardArticleVO vo = listVO.get(i);
+				Date key = new Date(vo.getRegDate().getYear(), vo.getRegDate().getMonth(), vo.getRegDate().getDate());
 
 				if (map.get(key) == null)
 					map.put(key, 1);
@@ -467,9 +467,9 @@ public class ChartController {
 		}
 
 		// data.put("regDate", array);
-		System.out.println(type);
-		System.out.println(map.toString());
-		System.out.println(sb.toString());
+//		System.out.println(type);
+//		System.out.println(map.toString());
+//		System.out.println(sb.toString());
 		return sb.toString();
 	}
 

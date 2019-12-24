@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="first.test.mapper.BoardBoardMapper">
+	
+	<select id="selectBoardList" resultType="first.test.vo.BoardBoardVO">
+		SELECT
+		    `boardId`,
+		    `boardType`,
+		    `note`,
+		    `name`,
+		    `order`,
+		    `isRpy`,
+		    `isComment`,
+		    `isSecret`,
+		    `isNotice`,
+		    `isUse`,
+		    `url`,
+		    `regDate`,
+		    `regId`,
+		    `modDate`,
+		    `modId`
+		FROM
+			board_board
+		ORDER BY `order` ASC, boardType ASC, name ASC
+		LIMIT #{pageStart}, #{perPageNum}		
+	</select>
+	
+	<select id="selectBoardListTotCnt" resultType="Integer">
+		SELECT count(boardId)
+		FROM board_board
+	</select>
+	
+	<select id="selectUserBoardList" resultType="first.test.vo.BoardBoardVO">
+		SELECT
+		    `boardId`,
+		    `boardType`,
+		    `note`,
+		    `name`,
+		    `order`,
+		    `isRpy`,
+		    `isComment`,
+		    `isSecret`,
+		    `isNotice`,
+		    `isUse`,
+		    `url`,
+		    `regDate`,
+		    `regId`,
+		    `modDate`,
+		    `modId`
+		FROM
+			board_board
+		WHERE isUse = 'Y'
+		ORDER BY `order` ASC, boardType ASC, name ASC
+		LIMIT #{pageStart}, #{perPageNum}		
+	</select>
+	
+	<select id="selectUserBoardListTotCnt" resultType="Integer">
+		SELECT count(boardId)
+		FROM board_board
+		WHERE isUse = 'Y'
+	</select>
+	
+	<select id="selectBoard" resultType="first.test.vo.BoardBoardVO">
+		SELECT
+		    `boardId`,
+		    `boardType`,
+		    `note`,
+		    `name`,
+		    `order`,
+		    `isRpy`,
+		    `isComment`,
+		    `isSecret`,
+		    `isNotice`,
+		    `isUse`,
+		    `url`,
+		    `regDate`,
+		    `regId`,
+		    `modDate`,
+		    `modId`
+		FROM
+			board_board
+		WHERE boardId = #{boardId}
+	</select>
+	
+	<select id="selectUrlBoard" resultType="first.test.vo.BoardBoardVO">
+		SELECT
+		    `boardId`,
+		    `boardType`,
+		    `note`,
+		    `name`,
+		    `order`,
+		    `isRpy`,
+		    `isComment`,
+		    `isSecret`,
+		    `isNotice`,
+		    `isUse`,
+		    `url`,
+		    `regDate`,
+		    `regId`,
+		    `modDate`,
+		    `modId`
+		FROM
+			board_board
+		WHERE 	url = #{url}
+	</select>
+	
+	<insert id="insertBoard" parameterType="first.test.vo.BoardBoardVO">
+		INSERT INTO board_board (
+		    `boardType`,
+		    `note`,
+		    `name`,
+		    `order`,
+		    `isRpy`,
+		    `isComment`,
+		    `isSecret`,
+		    `isNotice`,
+		    `isUse`,
+		    `url`,
+		    `regDate`,
+		    `regId`
+		) VALUES (
+			#{boardType},
+			#{note},
+			#{name},
+			#{order},
+			#{isRpy},
+			#{isComment},
+			#{isSecret},
+			#{isNotice},
+			#{isUse},
+			#{url},
+			now(),
+			#{regId}
+		)		
+	</insert>
+	
+	<update id="updateBoard" parameterType="first.test.vo.BoardBoardVO">
+		UPDATE board_board
+		SET		`boardId`		= #{boardId},
+			    `boardType`		= #{boardType},
+			    `note`			= #{note},
+			    `name`			= #{name},
+			    `order`			= #{order},
+			    `isRpy`			= #{isRpy},
+			    `isComment`		= #{isComment},
+			    `isSecret`		= #{isSecret},
+			    `isNotice`		= #{isNotice},
+			    `isUse`			= #{isUse},
+			    `url`			= #{url},
+			    `modDate`		= now(),
+			    `modId`			= #{modId}
+		WHERE boardId = #{boardId}
+	</update>
+	
+	<delete id="deleteBoard" parameterType="first.test.vo.BoardBoardVO">
+		DELETE FROM board_board
+		WHERE boardId = #{boardId}
+	</delete>
+	
+	<update id="updateBoardOrderPlus1">
+		UPDATE board_board
+		SET `order` = `order` + 1
+		WHERE `order` >= #{order}
+	</update>
+	
+	<update id="updateBoardOrderMinus1">
+		UPDATE board_board
+		SET `order` = `order` - 1
+		WHERE  #{order} >= `order`
+	</update>
+	
+	<update id="updateBoardOrder">
+		SET @rm := 0;
+		UPDATE board_board 
+		SET 
+		    `order` = (@rm:=@rm + 1)
+		ORDER BY `order` ASC , boardType ASC , name ASC;
+	</update>
+	
+	<update id="updateBoardOrderSortable">
+		UPDATE board_board
+		SET `order` = #{order}
+		WHERE boardId = #{boardId}
+	</update>
+		
+</mapper>

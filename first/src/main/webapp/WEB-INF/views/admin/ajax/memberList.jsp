@@ -1,6 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+
+<form id="ajaxform" action="/admin//member/excelUpload.ajax" method="post" enctype="multipart/form-data"> 
+<input type="file" name="excel" />
+<button type='submit' class='btn btn-info' id='memberUpBtn'>회원 엑셀 업로드</button>
+</form>
+
+
+<button type='button' class='btn btn-default' id='memberDownBtn'>샘플 엑셀 다운로드</button>
 <table class='table table-bordered table-hover'>
 	<colgroup>
 		<col width="20%">
@@ -74,7 +82,38 @@
 	</div>
 </div>
 
-<script>	
+<script>
+
+	$('#ajaxform').ajaxForm({
+	   //보내기전 validation check가 필요할경우
+         beforeSubmit: function (data, frm, opt) {
+        	 				var file_type = data[0].value.type;
+        	 				if(file_type != 'application/vnd.ms-excel') {
+        	 					alert('xls파일을 선택해주세요.');
+        	 					return false;
+        	 				}
+        	 				
+			                return true;
+			              },
+         //submit이후의 처리
+         success: function(responseText, statusText){
+        	if(responseText == 'finish')
+         		alert("회원 업로드 성공!!");
+        	else
+        		alert(responseText);
+        	
+        	adminMember();
+         },
+         //ajax error
+         error: function(){
+         	alert("에러발생!!");
+         	adminMember();
+         }                               
+       });
+	
+	$('#memberDownBtn').off().on('click', function(){
+		window.location="/admin/member/sample.xls";		
+	});
 
 	$('table tbody tr').click(function() {
 		var str = '';

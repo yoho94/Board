@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="first.test.mapper.BoardArticleMapper">
+	
+	<select id="selectMainNoticeList" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			C.name,
+			A.boardId,
+		    A.bno,
+		    A.title,
+		    A.content,
+		    A.regDate,
+		    A.writer,
+		    A.modDate,
+		    A.modWriter,
+		    A.password,
+		    A.viewCnt,
+		    A.re_group,
+		    A.re_sorts,
+		    A.re_depth,
+		    A.isDelete,
+		    A.isNotice,
+		    A.isSecret
+		FROM
+			board_article A
+		INNER JOIN board_board C
+		ON A.boardId = C.boardId
+		LEFT JOIN (SELECT * FROM board_read_tbl WHERE userId = #{userId}) B
+        ON A.bno = B.bno			
+		WHERE	C.boardType = 'notice'
+		AND		A.isDelete = 'N'
+		AND		A.isNotice = 'Y'
+		AND		B.bno is NULL
+		AND		C.isUse = 'Y'
+		ORDER BY bno DESC
+	</select>
+	
+	<select id="selectMainReadList" parameterType="hashMap" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			C.name,
+			A.boardId,
+		    A.bno,
+		    A.title,
+		    A.content,
+		    A.regDate,
+		    A.writer,
+		    A.modDate,
+		    A.modWriter,
+		    A.password,
+		    A.viewCnt,
+		    A.re_group,
+		    A.re_sorts,
+		    A.re_depth,
+		    A.isDelete,
+		    A.isNotice,
+		    A.isSecret
+		FROM
+			board_article A
+		INNER JOIN board_board C
+		ON A.boardId = C.boardId
+		LEFT JOIN (SELECT * FROM board_read_tbl WHERE userId = #{userId}) B
+        ON A.bno = B.bno			
+		WHERE	C.boardType = 'notice'
+		AND		A.isDelete = 'N'
+		AND		ifnull(A.isNotice, 'N') != 'Y'
+		AND		B.bno is NULL
+		AND		C.isUse = 'Y'
+		<include refid="search"></include>
+		ORDER BY A.re_group DESC, A.re_sorts asc
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+	
+	<select id="selectMainReadListTotCnt" parameterType="hashMap" resultType="Integer">
+		SELECT count(A.bno)
+		FROM
+			board_article A
+		INNER JOIN board_board C
+		ON A.boardId = C.boardId
+		LEFT JOIN (SELECT * FROM board_read_tbl WHERE userId = #{userId}) B
+        ON A.bno = B.bno			
+		WHERE	C.boardType = 'notice'
+		AND		A.isDelete = 'N'
+		AND		ifnull(A.isNotice, 'N') != 'Y'
+		AND		B.bno is NULL
+		AND		C.isUse = 'Y'
+		<include refid="search"></include>		
+	</select>	
+	
+	<select id="selectNoticeList" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			boardId,
+		    bno,
+		    title,
+		    content,
+		    regDate,
+		    writer,
+		    modDate,
+		    modWriter,
+		    password,
+		    viewCnt,
+		    re_group,
+		    re_sorts,
+		    re_depth,
+		    isDelete,
+		    isNotice,
+		    isSecret
+		FROM
+			board_article
+		WHERE	boardId = #{boardId}
+		AND		isDelete = 'N'
+		AND		isNotice = 'Y'
+		ORDER BY bno DESC
+	</select>
+	
+	<select id="selectReadList" parameterType="hashMap" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			A.boardId,
+		    A.bno,
+		    A.title,
+		    A.content,
+		    A.regDate,
+		    A.writer,
+		    A.modDate,
+		    A.modWriter,
+		    A.password,
+		    A.viewCnt,
+		    A.re_group,
+		    A.re_sorts,
+		    A.re_depth,
+		    A.isDelete,
+		    A.isNotice,
+		    A.isSecret
+		FROM
+			board_article A
+		LEFT JOIN (SELECT * FROM board_read_tbl WHERE userId = #{userId}) B
+        ON A.bno = B.bno			
+		WHERE	A.boardId = #{boardId}
+		AND		A.isDelete = 'N'
+		AND		ifnull(isNotice, 'N') != 'Y'
+		AND		B.bno is NULL
+		<include refid="search"></include>
+		ORDER BY A.re_group DESC, A.re_sorts asc
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+	
+	<select id="selectReadListTotCnt" parameterType="hashMap" resultType="Integer">
+		SELECT	count(A.bno) 
+		FROM	board_article A
+		LEFT JOIN (SELECT * FROM board_read_tbl WHERE userId = #{userId}) B
+        ON A.bno = B.bno
+        WHERE	A.boardId = #{boardId}
+		AND		A.isDelete = 'N'
+		AND		ifnull(isNotice, 'N') != 'Y'
+		AND		B.bno is NULL
+		<include refid="search"></include>
+	</select>		
+	
+	<select id="selectArticleList" parameterType="hashMap" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			boardId,
+		    bno,
+		    title,
+		    content,
+		    regDate,
+		    writer,
+		    modDate,
+		    modWriter,
+		    password,
+		    viewCnt,
+		    re_group,
+		    re_sorts,
+		    re_depth,
+		    isDelete,
+		    isNotice,
+		    isSecret
+		FROM
+			board_article
+		WHERE 	boardId = #{boardId}
+		AND		ifnull(isNotice, 'N') != 'Y'
+		<include refid="search"></include>
+		ORDER BY re_group DESC, re_sorts asc
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+	
+	<select id="selectArticleListTotCnt" parameterType="hashMap" resultType="Integer">
+		SELECT	count(bno) 
+		FROM	board_article 
+		WHERE	boardId = #{boardId}
+		AND		ifnull(isNotice, 'N') != 'Y'
+		<include refid="search"></include>
+	</select>
+	
+	<select id="selectArticle" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+			boardId,
+		    bno,
+		    title,
+		    content,
+		    regDate,
+		    writer,
+		    modDate,
+		    modWriter,
+		    password,
+		    viewCnt,
+		    re_group,
+		    re_sorts,
+		    re_depth,
+		    isDelete,
+		    isNotice,
+		    isSecret
+		FROM
+			board_article
+		WHERE	bno = #{bno}
+		<!-- <if test="isSecret == 'Y'">
+			AND		password = #{password}
+		</if> -->		
+	</select>
+	
+	<insert id="insertArticle" parameterType="first.test.vo.BoardArticleVO" useGeneratedKeys="true" keyProperty="bno">
+		INSERT INTO board_article (
+			boardId,
+		    title,
+		    content,
+		    regDate,
+		    writer,
+		    password,
+		    re_group,
+		    re_sorts,
+		    re_depth,
+		    isDelete,
+		    isNotice,
+		    isSecret		
+		) VALUES (
+			#{boardId},
+		    #{title},
+		    #{content},
+		    now(),
+		    #{writer},
+		    #{password},
+		    #{re_group},
+		    #{re_sorts},
+		    #{re_depth},
+		    #{isDelete},
+		    #{isNotice},
+		    #{isSecret}			
+		)
+	</insert>
+	
+	<update id="updateArticle" parameterType="first.test.vo.BoardArticleVO">
+		UPDATE 	board_article
+		SET		<!-- boardId		= #{boardId},
+			    bno			= #{bno}, -->	
+			    title		= #{title},
+			    content		= #{content},
+			    modDate		= now(),
+			    modWriter	= #{writer},
+			    password	= #{password},
+				<!-- re_group	= #{re_group},
+			    re_sorts	= #{re_sorts},
+			    re_depth	= #{re_depth},
+			    isDelete	= #{isDelete}, -->
+			    isNotice	= #{isNotice},
+			    isSecret	= #{isSecret}
+		WHERE	bno = #{bno}
+	</update>
+	
+	<insert id="insertReadTbl" parameterType="hashMap">
+		INSERT INTO board_read_tbl (
+			userId, bno, regDate, regId
+		)
+		VALUES (
+			#{userId}, #{bno}, now(), #{userId}
+		)
+	</insert>
+
+
+	<select id="listSearch" resultType="first.test.vo.BoardArticleVO">
+		SELECT 
+    		B.name, A.*
+		FROM
+		    board_article A,
+		    board_board B
+		WHERE
+		    A.boardId = B.boardId
+		<include refid="search"></include> 		
+		ORDER BY isNotice DESC, re_group DESC, re_sorts asc
+		LIMIT #{pageStart}, #{perPageNum} 
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+		SELECT 
+			count(*)
+		FROM
+		    board_article A,
+		    board_board B
+		WHERE
+		    A.boardId = B.boardId
+		<include refid="search"></include>
+	</select>
+
+	<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 't'.toString()">
+				AND title like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'c'.toString()">
+				AND content like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'w'.toString()">
+				AND writer like concat('%', #{keyword}, '%')
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				AND (title like concat('%', #{keyword}, '%') OR content like
+				concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'cw'.toString()">
+				AND (content like concat('%', #{keyword}, '%') OR writer like
+				concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'tcw'.toString()">
+				AND (title like concat('%', #{keyword}, '%')
+				OR content like concat('%', #{keyword}, '%')
+				OR writer like concat('%', #{keyword}, '%'))
+			</if>
+			<if test="searchType == 'del'.toString()">
+				AND title like concat('%', #{keyword}, '%') AND isDelete = 'Y'
+			</if>
+		</if>
+	</sql>
+	
+	<insert id="create" useGeneratedKeys="true" keyProperty="bno" parameterType="first.test.vo.BoardArticleVO">
+		INSERT INTO board_article(title, content, writer, isNotice)
+		VALUES(#{title}, #{content}, #{writer}, #{isNotice})		
+<!-- 		<selectKey order="AFTER" resultType="int" keyProperty="bno"> -->
+<!-- 			SELECT LAST_INSERT_ID() -->
+<!-- 		</selectKey> -->
+	</insert>
+	
+	<update id="updateReGroup">
+		UPDATE board_article SET re_group=#{bno} where bno=#{bno}
+	</update>
+	
+	<select id="read" resultType="first.test.vo.BoardArticleVO">
+		SELECT * FROM board_article WHERE bno=#{bno}
+	</select>
+	
+	<update id="updateViewcnt">
+		UPDATE board_article SET viewcnt = viewcnt + 1 WHERE bno = #{bno}
+	</update>
+	
+	<update id='delete'>
+		UPDATE board_article SET isDelete = 'Y' where bno=#{bno}
+	</update>
+	
+	<update id='restore'>
+		UPDATE board_article SET isDelete = 'N' where bno=#{bno}
+	</update>
+
+	<delete id="realDelete">
+		DELETE FROM board_article WHERE bno=#{bno}
+	</delete>
+	
+	<delete id="realDeleteAll">
+		DELETE FROM board_article WHERE re_group=#{bno}
+	</delete>
+	
+	<update id="update">
+		UPDATE board_article SET title=#{title}, content=#{content} WHERE bno=#{bno}
+	</update>
+	
+	<update id="reUpdate">
+		UPDATE board_article SET re_sorts = re_sorts + 1
+		WHERE re_group = #{re_group} AND re_sorts > #{re_sorts}
+	</update>
+
+	<insert id="reInsert">
+		INSERT INTO board_article(title, content, writer,
+		re_group, re_sorts, re_depth, boardId, password, isSecret)
+		VALUES(#{title}, #{content}, #{writer}, #{re_group}, #{re_sorts},
+		#{re_depth},
+		#{boardId}, #{password}, #{isSecret}
+		)
+	</insert>
+	
+	<select id="readNotice" resultType="first.test.vo.BoardArticleVO">
+		SELECT * FROM board_article WHERE isNotice = 'Y' ORDER BY isNotice DESC, bno DESC limit 1
+	</select>
+	
+	<select id="selectDate" resultType="first.test.vo.BoardArticleVO">
+		SELECT regDate FROM board_article order by regDate ASC;
+	</select>
+	
+</mapper>

@@ -321,7 +321,7 @@ body {
 <header>
 		<nav class="navbar navbar-default navbar-expand-lg navbar-light">
 			<div class="navbar-header d-flex col">
-				<a class="navbar-brand" href="/"><b>게시판</b></a>
+				<a class="navbar-brand" href="/board/list"><b>게시판</b></a>
 				<button type="button" data-target="#navbarCollapse"
 					data-toggle="collapse" class="navbar-toggle navbar-toggler ml-auto">
 					<span class="navbar-toggler-icon"></span> <span class="icon-bar"></span>
@@ -333,7 +333,7 @@ body {
 				class="collapse navbar-collapse justify-content-start">
 				<ul class="nav navbar-nav">
 					<li class="nav-item" id='home'><a href="/" class="nav-link">Home</a></li>
-					<li class="nav-item" id='board'><a href="/list"
+					<li class="nav-item" id='board'><a href="/board/list"
 						class="nav-link">게시판</a></li>
 					<li class="nav-item" id='chartPage'><a href="/chart/home"
 						class="nav-link">차트</a></li>
@@ -344,7 +344,7 @@ body {
 						class="nav-link">관리자 페이지</a></li>
 					</c:if>
 					<li>
-						<form class="navbar-form form-inline" action="/list">
+						<form class="navbar-form form-inline" action="/board/list">
 							<div class="input-group search-box">
 								<span class='input-group-btn'> <select name="searchType"
 									class='form-control'>

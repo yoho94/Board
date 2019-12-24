@@ -1,5 +1,6 @@
 package first.test.controller;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,8 +21,17 @@ public class ErrorController {
 	@RequestMapping(value="/common/error{error_code}.do")
     public ModelAndView error(HttpServletRequest request, @PathVariable String error_code) {
         ModelAndView mv = new ModelAndView("/error");
-        String msg = (String) request.getAttribute("javax.servlet.error.message"); 
-         
+        String msg = (String) request.getAttribute("javax.servlet.error.message");
+        
+        logger.error(msg);
+        System.out.println("===============================");
+        Enumeration<String> attrNames = request.getAttributeNames();
+        while(attrNames.hasMoreElements()){
+            String attrName = attrNames.nextElement();
+            Object attrValue = request.getAttribute(attrName);
+            System.out.println(attrName + " : " + attrValue);
+        }
+        System.out.println("===============================");
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("STATUS_CODE", request.getAttribute("javax.servlet.error.status_code"));
         map.put("REQUEST_URI", request.getAttribute("javax.servlet.error.request_uri"));
