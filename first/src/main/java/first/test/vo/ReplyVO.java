@@ -14,10 +14,24 @@ public class ReplyVO {
 	private String writer;
 	private Date regDate;
 	private Integer isDelete;
-	
+	private Character likeType;
 	private Integer re_depth;
+	private String userId;
 	
 	
+	
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+	public Character getLikeType() {
+		return likeType;
+	}
+	public void setLikeType(Character likeType) {
+		this.likeType = likeType;
+	}
 	public Integer getRe_depth() {
 		return re_depth;
 	}

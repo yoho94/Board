@@ -2,12 +2,13 @@ package first.test.service;
 
 import java.util.List;
 
+import first.test.vo.ReplyUserLike;
 import first.test.vo.ReplyVO;
 
 public interface ReplyService {
 
 	// 댓글 조회
-	public List<ReplyVO> readReply(int bno, String orderType) throws Exception;
+	public List<ReplyVO> readReply(int bno, String orderType, String userId) throws Exception;
 
 	// 댓글 작성
 	public void writeReply(ReplyVO vo) throws Exception;
@@ -24,4 +25,6 @@ public interface ReplyService {
 	
 	public Integer updateGood(ReplyVO vo) throws Exception;
 	public Integer updateBad(ReplyVO vo) throws Exception;
+	
+	public Integer replyLike(ReplyUserLike vo, Character isUpdate) throws Exception;
 }

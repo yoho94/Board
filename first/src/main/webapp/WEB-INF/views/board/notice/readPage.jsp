@@ -51,7 +51,13 @@ function fn_modComment(rno) {
 		return;
 	}
 	</c:if>
-	var content = prompt("덧글 내용을 입력하세요.");
+	var isDelete = $('#mod'+rno).attr('data-isdelete');
+	if(isDelete == 1) {
+		alert("삭제 된 덧글에는 수정이 불가능합니다.");
+		return;
+	}
+	
+	var content = prompt("덧글 내용을 입력하세요.", "");
 	
 	if(!content)
 		return;	
@@ -82,6 +88,12 @@ function fn_delComment(rno) {
 		return;
 	}
 	</c:if>
+	
+	var isDelete = $('#del'+rno).attr('data-isdelete');
+	if(isDelete == 1) {
+		alert("이미 삭제 된 덧글입니다.");
+		return;
+	}
 	
 	if(!confirm("정말 삭제하시겠습니까?"))
 		return;
@@ -183,12 +195,27 @@ function getCommentList(){
                 	html += "<span class='glyphicon glyphicon-user'></span>";
                 	html += data[i].writer + " (" + data[i].regDate + ")" + "좋아요 : " + data[i].good_score + " 싫어요 : " + data[i].bad_score;
                 	html += "</p>";
-                	html += "<p class='bg-info'>"+ data[i].content + "</p>";
+                	if(data[i].isDelete == 1)
+                		html += "<p class='bg-info'><d>(삭제 된 댓글입니다.)</d></p>";
+                	else
+                		html += "<p class='bg-info'>"+ data[i].content + "</p>";             
                 	html += "<div class='form-group'>";
-                	html += "<button type='button' class='btn btn-default btn-xs' data-rno='"+data[i].rno+"' id='goodBtn'>좋아요</button>";
-                	html += "<button type='button' class='btn btn-default btn-xs' data-rno='"+data[i].rno+"' id='badBtn'>싫어요</button>";
-                	html += "<button type='button' class='replyUpdate btn btn-warning btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='mod"+data[i].rno+"' onClick='fn_modComment("+data[i].rno+")'>수정</button>";
-                	html += "<button type='button' class='replyDelete btn btn-danger btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='del"+data[i].rno+"' onClick='fn_delComment("+data[i].rno+")'>삭제</button>";
+                	html += "<label> <input type='radio' name='likeType"+data[i].rno+"' value='G' data-isDelete='"+data[i].isDelete+"' data-rno='"+data[i].rno+"' id='likeType'";
+                	if(data[i].likeType == 'G')
+                		html += " checked='checked' data-isUpdate='Y'";
+                	else
+                		html += "data-isUpdate='N'";
+                	html += "/>좋아요</label>";                	
+                	html += "<label> <input type='radio' name='likeType"+data[i].rno+"' value='B' data-isDelete='"+data[i].isDelete+"' data-rno='"+data[i].rno+"' id='likeType'";
+                	if(data[i].likeType == 'B')
+                		html += " checked='checked' data-isUpdate='Y'";
+                	else
+                		html += "data-isUpdate='N'";
+                	html += "/>싫어요</label>";
+                	// html += "<button type='button' class='btn btn-default btn-xs' data-isDelete='"+data[i].isDelete+"' data-rno='"+data[i].rno+"' id='goodBtn'>좋아요</button>";
+                	// html += "<button type='button' class='btn btn-default btn-xs' data-isDelete='"+data[i].isDelete+"' data-rno='"+data[i].rno+"' id='badBtn'>싫어요</button>";
+                	html += "<button type='button' class='replyUpdate btn btn-warning btn-xs' data-isDelete='"+data[i].isDelete+"' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='mod"+data[i].rno+"' onClick='fn_modComment("+data[i].rno+")'>수정</button>";
+                	html += "<button type='button' class='replyDelete btn btn-danger btn-xs data-isDelete='"+data[i].isDelete+"'' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='del"+data[i].rno+"' onClick='fn_delComment("+data[i].rno+")'>삭제</button>";
                 	html += "<button type='button' class='repWrite btn btn-info btn-xs' data-rno='"+data[i].rno+"' data-writer='"+data[i].writer+"' id='rep"+data[i].rno+"' onClick='fn_disply("+data[i].rno+")'>답글</button>";
          			html += "<div id='reDiv"+ data[i].rno +"'' style='display: none;'>";
          			html += "<form id='reCommentForm"+ data[i].rno +"' method='post'>";
@@ -330,8 +357,43 @@ function getCommentList(){
 		
 	});
 	
+	$(document).on('change', "#likeType", function(){
+		var rno = $(this).attr('data-rno');
+		
+		var isDelete = $(this).attr('data-isdelete');
+		if(isDelete == 1) {
+			alert("삭제 된 덧글에는 평가가 불가능합니다.");
+			return;
+		}	
+		
+		var likeType = $('input:radio[name="likeType'+rno+'"]:checked').val();
+		var isUpdate = $(this).attr('data-isupdate');
+		var data = $('#commentForm').serialize()  + "&rno=" + rno + "&likeType=" + likeType + "&isUpdate=" + isUpdate;
+		
+		console.log(data);
+		
+		$.ajax({
+	        type:'POST',
+	        url : "/board/commentLike.do",
+	        data: data,
+	        success : function(data){
+	        	//if(data == 'fail')
+	        	//	alert("이미 평가를 했습니다.");
+	        	console.log(data);
+	        	getCommentList();
+	        }
+		});
+		
+	});
+	
 	$(document).on('click', '#goodBtn', function() {
 		var rno = $(this).attr('data-rno');
+		
+		var isDelete = $(this).attr('data-isdelete');
+		if(isDelete == 1) {
+			alert("삭제 된 덧글에는 평가가 불가능합니다.");
+			return;
+		}
 		
 		$.ajax({
 	        type:'POST',
@@ -349,6 +411,12 @@ function getCommentList(){
 	
 	$(document).on('click', '#badBtn', function() {
 		var rno = $(this).attr('data-rno');
+		
+		var isDelete = $(this).attr('data-isdelete');
+		if(isDelete == 1) {
+			alert("삭제 된 덧글에는 평가가 불가능합니다.");
+			return;
+		}
 		
 		$.ajax({
 	        type:'POST',
@@ -412,16 +480,19 @@ function getCommentList(){
 			</c:if>
 			<button type="button" class="btn btn-default" id='list'>닫기</button>
 		</div>
-			
+		<hr>
 		<div id="reply">
-			<button type='button' class='btn btn-default' id='order_new'>최신순</button>
-			<button type='button' class='btn btn-default' id='order_old'>과거순</button>
-			<button type='button' class='btn btn-default' id='order_score'>평점순</button>
-			<ol class="replyList" id='replyList'>
-			</ol>
+			<div class="text-right">
+				<button type='button' class='btn btn-default' id='order_new'>과거순</button>
+				<button type='button' class='btn btn-default' id='order_old'>최신순</button>
+				<button type='button' class='btn btn-default' id='order_score'>평점순</button>
+			</div>
+			<ul class="replyList" id='replyList'>
+			</ul>
 		<hr>
 		<section class="replyForm" id='replyMainForm'>
 		<form role="form" method="post" autocomplete="off" class="form-horizontal" id='commentForm'>
+			<input type="hidden" id='userId' name="userId" value='${loginVO.userId}'>
 			<input type="hidden" id='orderType' name="orderType" value='new'>
 			<input type="hidden" name="parent" value='0'>
 			<input type="hidden" name="boardId" value='${articleVO.boardId}'>

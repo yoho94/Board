@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,6 +37,7 @@ import first.test.service.ReplyService;
 import first.test.vo.BoardArticleVO;
 import first.test.vo.MemberVO;
 import first.test.vo.PageMaker;
+import first.test.vo.ReplyUserLike;
 import first.test.vo.ReplyVO;
 import first.test.vo.SearchCriteria;
 
@@ -349,13 +349,14 @@ public class MainController {
     @RequestMapping(value="/board/commentList.do", produces="application/json; charset=utf8")
     @ResponseBody
     public ResponseEntity ajax_commentList(@ModelAttribute("boardVO") BoardArticleVO boardVO, HttpServletRequest request
-    		,String orderType) throws Exception{
+    		,String orderType, String userId) throws Exception{
         
+    	
         HttpHeaders responseHeaders = new HttpHeaders();
         ArrayList<HashMap> hmlist = new ArrayList<HashMap>();
         
         // 해당 게시물 댓글
-        List<ReplyVO> commentVO = repService.readReply(boardVO.getBno(), orderType);
+        List<ReplyVO> commentVO = repService.readReply(boardVO.getBno(), orderType, userId);
         
         if(commentVO.size() > 0){
             for(int i=0; i<commentVO.size(); i++){
@@ -368,6 +369,9 @@ public class MainController {
                 hm.put("re_depth", commentVO.get(i).getRe_depth());
                 hm.put("good_score", commentVO.get(i).getGood_score());
                 hm.put("bad_score", commentVO.get(i).getBad_score());
+                hm.put("isDelete", commentVO.get(i).getIsDelete());
+                hm.put("likeType", commentVO.get(i).getLikeType());
+                
                 
                 hmlist.add(hm);
             }
@@ -377,6 +381,26 @@ public class MainController {
         JSONArray json = new JSONArray(hmlist);        
         return new ResponseEntity(json.toString(), responseHeaders, HttpStatus.CREATED);
         
+    }
+    
+    @RequestMapping(value="/board/commentLike.do")
+    @ResponseBody
+    public String commentLike(ReplyUserLike vo, Character isUpdate, HttpServletRequest request) throws Exception {
+		HttpSession session = request.getSession();
+		
+		MemberVO loginVO = (MemberVO) session.getAttribute("loginVO");	
+    	if(loginVO == null)
+    		return "fail";
+		
+    	vo.setUserId(loginVO.getUserId());
+    	
+    	Integer tmp = repService.replyLike(vo, isUpdate);
+    	
+    	if(tmp == null || tmp == 0)
+    		return "fail";
+    	
+    	else
+    		return "success";
     }
     
     @RequestMapping(value="/board/commentGood.do")

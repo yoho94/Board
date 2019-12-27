@@ -19,7 +19,7 @@ function openPop(form, action){
     var popupX = (window.screen.width / 2) - (width / 2);
     var popupY= (window.screen.height / 2) - (height / 2);
     
-    var status = "toolbar=no,directories=no,scrollbars=no,resizable=no,status=no,menubar=no,width="+width+", height="+height+", left="+popupX+",top=" + popupY;
+    var status = "toolbar=no,directories=no,scrollbars=yes,resizable=no,status=no,menubar=no,width="+width+", height="+height+", left="+popupX+",top=" + popupY;
     window.open('', 'popup', status);
     var frm = form ;
 	frm.attr('action', action);

@@ -8,7 +8,8 @@
 </form>
 
 
-<button type='button' class='btn btn-default' id='memberDownBtn'>샘플 엑셀 다운로드</button>
+<!-- <button type='button' class='btn btn-default' id='memberDownBtn'>샘플 엑셀 다운로드</button> -->
+<a class='btn btn-default' href='/admin/member/sample.xls' type="mime/type" download>샘플 엑셀 다운로드</a>
 <table class='table table-bordered table-hover'>
 	<colgroup>
 		<col width="20%">
@@ -111,8 +112,51 @@
          }                               
        });
 	
+	function makeFrame(url,target) { 
+
+	    ifrm = document.createElement( "IFRAME" ); 
+
+	    ifrm.setAttribute( "style", "display:none;" ) ;
+
+	    ifrm.setAttribute( "src", url ) ; 
+
+	    ifrm.setAttribute( "name", target) ; 
+
+	    ifrm.style.width = 0+"px"; 
+
+	    ifrm.style.height = 0+"px"; 
+
+	    document.body.appendChild( ifrm ) ; 
+
+	} 
+	
+	function removeiframe() {
+
+		var iframes = document.getElementsByTagName('iframe');
+
+		for (var i = 0; i < iframes.length; i++) {
+
+		    iframes[i].parentNode.removeChild(iframes[i]);
+
+		}
+
+	}
+	
 	$('#memberDownBtn').off().on('click', function(){
-		window.location="/admin/member/sample.xls";		
+		//window.location="/admin/member/sample.xls";
+		//var _window = window.open("/admin/member/sample.xls","_blank");
+		//_window.document.close();
+		//_window.document.execCommand('SaveAs', true, "sample.xls" || "/admin/member/sample.xls")
+		//_window.close();
+		var fileURL = "/admin/member/sample.xls";
+		var fileName = "sample.xls";
+		
+		makeFrame(fileURL,fileName);
+  		var _window = window.open(fileURL, fileName);
+        _window.document.close();
+        _window.document.execCommand('SaveAs', true, fileName || fileURL)
+        _window.close();
+        removeiframe();
 	});
 
 	$('table tbody tr').click(function() {

@@ -70,6 +70,7 @@
 		<input type="hidden" name="keyword" value="${pvo.keyword}">
 		<input type="hidden" name="boardId" value='${articleVO.boardId}'>
 		<input type="hidden" name="url" value='${boardVO.url}'>
+		<input type="hidden" name="bno" value="${articleVO.bno}">
 	
 		<div class="box-body container">
 			<%-- <div class="form-group">

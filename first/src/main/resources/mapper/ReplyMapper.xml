@@ -4,8 +4,8 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="first.test.mapper.ReplyMapper">
 
-	<!-- 댓글 조회 --> 
-	<select id="readReply" parameterType="hashMap" resultType="first.test.vo.ReplyVO">
+	<!-- 댓글 조회 -->	
+	<!-- <select id="readReply" parameterType="hashMap" resultType="first.test.vo.ReplyVO">
 		SELECT 
 		    A.*, CONNECTBY.level-1 as re_depth
 		FROM
@@ -26,6 +26,40 @@
 		        @id IS NOT NULL) CONNECTBY
 		        INNER JOIN
 		    reply A ON CONNECTBY.rno = A.rno		
+	</select> -->
+	
+	<select id="readReply" parameterType="hashMap" resultType="first.test.vo.ReplyVO">	
+		SELECT 
+		     A.bno
+		    ,A.rno
+		    ,A.content
+		    ,A.writer
+		    ,A.regDate
+		    ,A.parent
+		    ,A.isDelete
+		    , CONNECTBY.level - 1 AS re_depth, C.likeType
+		    , (select count(*) as good_score from reply_user_like where bno = #{bno} AND rno=A.rno AND likeType='G') as good_score
+		    , (select count(*) as bad_score from reply_user_like where bno = #{bno} AND rno=A.rno AND likeType='B') as bad_score
+		FROM
+		    (SELECT 
+		        <if test="orderType == 'new'.toString()">
+		        GET_REPLY_LIST_NEW
+		        </if>
+		        <if test="orderType == 'old'.toString()">
+		        GET_REPLY_LIST_OLD
+		        </if>
+		        <if test="orderType == 'score'.toString()">
+		        GET_REPLY_LIST_SCORE
+		        </if>
+		        (#{bno}) AS rno, @level AS level
+		    FROM
+		        (SELECT @start_with:=0, @id:=@start_with, @level:=0) vars, reply
+		    WHERE
+		        @id IS NOT NULL) CONNECTBY
+		        inner JOIN
+		    reply A ON CONNECTBY.rno = A.rno
+			left join (select likeType, rno from reply_user_like where userId=#{userId}) as C
+		        ON A.rno = C.rno	
 	</select>
 
 	<insert id="writeReply" useGeneratedKeys="true" keyProperty="rno">
@@ -73,6 +107,21 @@
 		update reply
 		set bad_score = bad_score + 1
 		where rno = #{rno}
+	</update>
+	
+	<!-- 유저벌 좋아요 싫어요 -->
+	<insert id="insertReplyUserLike">
+		INSERT INTO reply_user_like (
+			bno, rno, userId, likeType
+		) VALUES (
+			#{bno}, #{rno}, #{userId}, #{likeType}
+		)
+	</insert>
+	
+	<update id="updateReplyUserLike">
+		UPDATE reply_user_like
+		SET likeType = #{likeType}
+		WHERE bno = #{bno} AND rno = #{rno} AND userId = #{userId}
 	</update>
 
 </mapper>

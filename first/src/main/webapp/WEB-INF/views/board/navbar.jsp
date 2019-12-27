@@ -580,7 +580,7 @@ body {
 		};
 	</script>
 	
-<div id="mySidenav" class="sidenav">
+<div id="mySidenav" class="sidenav" style="display: none">
 	<a href="/board/list"	class="nav-link">게시판 홈</a>
 	<c:import url="/board/sidenavList"></c:import>
 </div>
@@ -588,15 +588,17 @@ body {
 <script>
 /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
 function openNav() {
-  document.getElementById("mySidenav").style.width = "500px";
+	document.getElementById("mySidenav").style.display = "";
+	document.getElementById("mySidenav").style.width = "500px";  
 //   document.getElementById("main").style.marginLeft = "250px";
   $("body").attr("style", "margin-left:500px;");
 //   document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
 }
 
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
-function closeNav() {
-  document.getElementById("mySidenav").style.width = "0";
+function closeNav() {	
+	document.getElementById("mySidenav").style.width = "0";  
+	document.getElementById("mySidenav").style.display = "none";
 //   document.getElementById("main").style.marginLeft = "0";
   $("body").attr("style", "margin-left:0px;");
 //   document.body.style.backgroundColor = "white";

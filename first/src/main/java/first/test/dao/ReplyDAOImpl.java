@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import first.test.vo.ReplyUserLike;
 import first.test.vo.ReplyVO;
 
 @Repository
@@ -64,6 +65,16 @@ public class ReplyDAOImpl implements ReplyDAO {
 	@Override
 	public Integer updateBad(ReplyVO vo) throws Exception {
 		return sql.update(namespace + ".updateBad", vo);
+	}
+
+	@Override
+	public Integer insertReplyUserLike(ReplyUserLike vo) throws Exception {
+		return sql.insert(namespace + ".insertReplyUserLike", vo);
+	}
+
+	@Override
+	public Integer updateReplyUserLike(ReplyUserLike vo) throws Exception {
+		return sql.update(namespace + ".updateReplyUserLike", vo);
 	}
 	
 	

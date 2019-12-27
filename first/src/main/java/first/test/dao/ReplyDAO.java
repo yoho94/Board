@@ -3,6 +3,7 @@ package first.test.dao;
 import java.util.HashMap;
 import java.util.List;
 
+import first.test.vo.ReplyUserLike;
 import first.test.vo.ReplyVO;
 
 public interface ReplyDAO {
@@ -25,5 +26,8 @@ public interface ReplyDAO {
 	
 	public Integer updateGood(ReplyVO vo) throws Exception;
 	public Integer updateBad(ReplyVO vo) throws Exception;
+	
+	public Integer insertReplyUserLike(ReplyUserLike vo) throws Exception;
+	public Integer updateReplyUserLike(ReplyUserLike vo) throws Exception;
 		
 }

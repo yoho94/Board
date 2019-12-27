@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Service;
 
 import first.test.dao.ReplyDAO;
+import first.test.vo.ReplyUserLike;
 import first.test.vo.ReplyVO;
 
 
@@ -19,11 +20,12 @@ public class ReplyServiceImpl implements ReplyService {
 
 	// 댓글 조회
 	@Override
-	public List<ReplyVO> readReply(int bno, String orderType) throws Exception {
+	public List<ReplyVO> readReply(int bno, String orderType, String userId) throws Exception {
 		HashMap<String, Object> map = new HashMap<>();
 		
 		map.put("bno", bno);
 		map.put("orderType", orderType);
+		map.put("userId", userId);
 		
 		return dao.readReply(map);
 	}
@@ -65,6 +67,23 @@ public class ReplyServiceImpl implements ReplyService {
 	@Override
 	public Integer updateBad(ReplyVO vo) throws Exception {
 		return dao.updateBad(vo);
+	}
+
+	@Override
+	public Integer replyLike(ReplyUserLike vo, Character isUpdate) throws Exception {
+		Integer tmp;
+		
+		if(isUpdate == null || isUpdate == 'N') {
+			try {
+				tmp = dao.insertReplyUserLike(vo);
+			} catch (Exception e) {
+				tmp = dao.updateReplyUserLike(vo);
+			}			
+		} else {
+			tmp = dao.updateReplyUserLike(vo);
+		}
+		
+		return tmp;
 	}
 	
 	

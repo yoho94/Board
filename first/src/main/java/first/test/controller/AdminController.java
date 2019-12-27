@@ -214,7 +214,7 @@ public class AdminController {
 		memberService.updateAdmin(vo);
 	}
 	
-	@RequestMapping(value = "/member/excelUpload.ajax", method = RequestMethod.POST)
+	@RequestMapping(value = "/member/excelUpload.ajax", method = RequestMethod.POST, produces = "application/text; charset=utf8")
 	@ResponseBody
 	public String excelUpload(HttpServletRequest request) throws Exception {
 		request.setCharacterEncoding("UTF-8");
@@ -254,27 +254,47 @@ public class AdminController {
 		    if(row !=null){
 		    	try {
 		    		MemberVO member = new MemberVO();
-			    	String userId = row.getCell(0).getStringCellValue();
-			    	String userPass = row.getCell(1).getStringCellValue();
-			    	String userName = row.getCell(2).getStringCellValue();
-			    	String isAdmin = row.getCell(3).getStringCellValue();
-			    	String isUsing = row.getCell(4).getStringCellValue();
+			    	String userId = getValue(row.getCell(0));
+			    	String userPass = getValue(row.getCell(1));
+			    	String userName = getValue(row.getCell(2));
+			    	String isAdmin = getValue(row.getCell(3));
+			    	String isUsing = getValue(row.getCell(4));
 			    	
-			    	member.setUserId(userId);
-			    	member.setUserPass(userPass);		    	
-			    	member.setUserName(userName);
-			    	member.setIsAdmin(Integer.parseInt(isAdmin));
-			    	member.setIsUsing(isUsing.charAt(0));
+			    	member.setUserId(userId.trim());
+			    	member.setUserPass(userPass.trim());		    	
+			    	member.setUserName(userName.trim());
+			    	try {
+			    		member.setIsAdmin(Integer.parseInt(isAdmin.trim()));
+			    	} catch (Exception e) {
+			    		return "ERROR\nROW : " + rowindex + "\nMSG : 관리자 여부는 숫자만 가능합니다.";
+			    	}
+			    	try {
+			    		member.setIsUsing(isUsing.trim().charAt(0));
+			    	} catch (Exception e) {
+			    		return "ERROR\nROW : " + rowindex + "\nMSG : 회원 사용 여부를 확인해주세요.";
+			    	}
 			    	logger.info(member.toString());
 			    	
-			    	if(!member.valid())
-			    		return "ERROR\nROW : " + rowindex;
+			    	if(!member.valid()) {
+			    		
+			    		return "ERROR\nROW : " + rowindex + "\nMSG : " + member.getValidMsg();
+			    	}
+			    	
+			    	Integer idCheck = memberService.idCheck(member.getUserId());
+			    	if(idCheck == null || idCheck > 0) {
+			    		return "ERROR\nROW : " + rowindex + "\nMSG : 아이디가 이미 존재합니다.";
+			    	}
+			    	
+			    	Integer nameCheck = memberService.nameCheck(member.getUserName());
+			    	if(nameCheck == null || nameCheck > 0) {
+			    		return "ERROR\nROW : " + rowindex + "\nMSG : 이름이 이미 존재합니다.";
+			    	}
 			    	
 			    	memberService.register(member);
 			    	
 				} catch (Exception e) {
 					logger.error(e.toString());
-					return "ERROR\nROW : " + rowindex;
+					return "ERROR\nROW : " + rowindex + "\nMSG : 알수없는 이유로 에러가 발생";
 				}		    	
 		    }
 		}
@@ -282,8 +302,48 @@ public class AdminController {
 		return "finish";
 	}
 	
+	public String getValue(HSSFCell cell) {		
+        String value = "";
+        
+        if(cell == null) {
+            value = "";
+        }
+        else {
+        	cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+        	
+            if( cell.getCellType() == HSSFCell.CELL_TYPE_FORMULA ) {
+                value = cell.getCellFormula();
+            }
+            else if( cell.getCellType() == HSSFCell.CELL_TYPE_NUMERIC ) {
+                value = cell.getNumericCellValue() + "";
+            }
+            else if( cell.getCellType() == HSSFCell.CELL_TYPE_STRING ) {
+                value = cell.getStringCellValue();
+            }
+            else if( cell.getCellType() == HSSFCell.CELL_TYPE_BOOLEAN ) {
+                value = cell.getBooleanCellValue() + "";
+            }
+            else if( cell.getCellType() == HSSFCell.CELL_TYPE_ERROR ) {
+                value = cell.getErrorCellValue() + "";
+            }
+            else if( cell.getCellType() == HSSFCell.CELL_TYPE_BLANK ) {
+                value = "";
+            }
+            else {
+                value = cell.getStringCellValue();
+            }
+        }
+        
+//        if(value.substring(value.length() - 2).equals(".0"))
+//        	value = value.substring(0, value.length() - 2);
+        
+        return value;
+    }
+	
 	@RequestMapping("/member/sample.xls")
 	public void sampleExcel(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		response.setContentType("mime/type");
+		
 		HSSFWorkbook workbook = new HSSFWorkbook(); // 새 엑셀 생성
         HSSFSheet sheet = workbook.createSheet(); // 새 시트(Sheet) 생성
         HSSFRow row = sheet.createRow(0); // 엑셀의 행은 0번부터 시작
