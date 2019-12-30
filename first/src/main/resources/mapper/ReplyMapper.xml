@@ -123,5 +123,21 @@
 		SET likeType = #{likeType}
 		WHERE bno = #{bno} AND rno = #{rno} AND userId = #{userId}
 	</update>
+	
+	<update id="updateLike">
+	update reply A
+	, (
+    SELECT a.rno
+    , (select count(*) as good_score from reply_user_like where rno=A.rno AND likeType='G') as good_score
+    , (select count(*) as bad_score from reply_user_like where rno=A.rno AND likeType='B') as bad_score
+    FROM
+		reply as a
+    ) as B
+    SET
+    A.good_score = B.good_score
+    , A.bad_score = B.bad_score
+    WHERE
+    A.rno = B.rno
+	</update>
 
 </mapper>

@@ -26,6 +26,7 @@ public class ReplyServiceImpl implements ReplyService {
 		map.put("bno", bno);
 		map.put("orderType", orderType);
 		map.put("userId", userId);
+		dao.updateLike();
 		
 		return dao.readReply(map);
 	}

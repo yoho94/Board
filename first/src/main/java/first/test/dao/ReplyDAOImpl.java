@@ -76,6 +76,11 @@ public class ReplyDAOImpl implements ReplyDAO {
 	public Integer updateReplyUserLike(ReplyUserLike vo) throws Exception {
 		return sql.update(namespace + ".updateReplyUserLike", vo);
 	}
+
+	@Override
+	public Integer updateLike() throws Exception {
+		return sql.update(namespace + ".updateLike");
+	}
 	
 	
 	

@@ -137,6 +137,14 @@ CREATE TABLE `reply` (
   PRIMARY KEY (`rno`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8
 
+CREATE TABLE `reply_user_like` (
+  `bno` int(11) NOT NULL,
+  `rno` int(11) NOT NULL,
+  `userId` varchar(45) NOT NULL,
+  `likeType` char(1) NOT NULL COMMENT 'G = GOOD, B = BAD',
+  PRIMARY KEY (`rno`,`userId`,`bno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='덧글 좋아요 싫어요 여부'
+
 CREATE TABLE `survey_answer` (
   `survey_seq` int(11) NOT NULL COMMENT '기본키(순번)',
   `question_order` int(11) NOT NULL COMMENT '문항번호(순서)',
@@ -361,3 +369,58 @@ BEGIN
     END LOOP;
 END
 
+CREATE DEFINER=`root`@`localhost` FUNCTION `get_reply_list_score2`(searchBno INT) RETURNS int(11)
+    READS SQL DATA
+BEGIN
+	DECLARE _parent INT;
+    DECLARE _rank INT;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET @id = NULL;
+
+    SET _parent = @id;
+    SET _rank = 0;
+
+    IF @id IS NULL THEN
+            RETURN NULL;
+    END IF;
+
+    LOOP
+        SET @innerrank = 0;
+        SELECT p.id 
+        INTO   @id
+        FROM   (
+        select R.* , @innerrank := @innerrank+1 AS rank from(
+                SELECT   A.rno as id, ifnull((ifnull(G.good_score, 0) - ifnull(B.bad_score, 0)), 0) as score
+                FROM     reply as A
+                left join (select count(*) as good_score, rno from reply_user_like where bno = searchBno AND likeType='G' group by rno) as G
+                on A.rno = G.rno
+                left join (select count(*) as bad_score, rno from reply_user_like where bno = searchBno AND likeType='B' group by rno) as B
+                on A.rno = B.rno
+                WHERE    COALESCE(parent, 0) = _parent AND bno = searchBno
+                ORDER BY                 
+                COALESCE(parent, A.rno) ASC, score DESC
+                ) as R) p 
+        WHERE   p.rank > _rank LIMIT 0, 1;
+        IF @id IS NOT NULL OR _parent = @start_with THEN
+                SET @level = @level + 1;
+                RETURN @id;
+        END IF;
+        SET @level := @level - 1;
+        SET @innerrank = 0;
+        SELECT COALESCE(p.parent, 0), p.rank
+        INTO   _parent, _rank
+        FROM   (
+        select R.* , @innerrank := @innerrank+1 AS rank from(
+                SELECT A.rno as id, parent as parent, ifnull((ifnull(G.good_score, 0) - ifnull(B.bad_score, 0)), 0) as score
+                FROM    reply as A
+				left join (select count(*) as good_score, rno from reply_user_like where bno = searchBno AND likeType='G' group by rno) as G
+                on A.rno = G.rno
+                left join (select count(*) as bad_score, rno from reply_user_like where bno = searchBno AND likeType='B' group by rno) as B
+                on A.rno = B.rno
+                WHERE   COALESCE(parent, 0) = (
+                    SELECT COALESCE(parent, 0) FROM reply WHERE rno = _parent
+                    )  AND bno = searchBno
+                ORDER BY COALESCE(parent, A.rno) ASC , score DESC
+               ) as R) p
+        WHERE p.id = _parent;
+    END LOOP;
+END

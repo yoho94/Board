@@ -29,5 +29,7 @@ public interface ReplyDAO {
 	
 	public Integer insertReplyUserLike(ReplyUserLike vo) throws Exception;
 	public Integer updateReplyUserLike(ReplyUserLike vo) throws Exception;
+	
+	public Integer updateLike() throws Exception;
 		
 }
